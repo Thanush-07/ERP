@@ -1,21 +1,25 @@
 // routes/company.js
-const express = require("express");
-const mongoose = require("mongoose");
+import express from "express";
+import mongoose from "mongoose";
+import multer from "multer";
 
-const Institution = require("../models/Institution");
-const User = require("../models/User");
-const Branch = require("../models/Branch");
-const Student = require("../models/Student");
-const FeePayment = require("../models/FeePayment");
+import { Institution } from "../models/Institution.js";
+import { User } from "../models/User.js";
+import { Branch } from "../models/Branch.js";
+import { Student } from "../models/Student.js";
+import { FeePayment } from "../models/FeePayment.js";
 
 const router = express.Router();
+
+// Multer memory storage (keep file in memory, we put it into Mongo)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 /* ----- DASHBOARD ROUTE ----- */
 router.get("/dashboard", async (req, res) => {
   try {
     const { institutionId, branchId } = req.query;
 
-    // optional filters
     const branchFilter = {};
     if (institutionId) branchFilter.institution_id = institutionId;
     if (branchId) branchFilter._id = branchId;
@@ -47,9 +51,9 @@ router.get("/dashboard", async (req, res) => {
 
     res.json({
       totals,
-      institutions: instList,      // <-- React now sees this
+      institutions: instList,
       branches,
-      recentActivities: []         // fill later if needed
+      recentActivities: []
     });
   } catch (err) {
     console.error("COMPANY DASHBOARD ERROR:", err);
@@ -57,12 +61,12 @@ router.get("/dashboard", async (req, res) => {
   }
 });
 
-
-
 /* ----- INSTITUTIONS CRUD ----- */
 router.get("/institutions", async (req, res) => {
   try {
-    const list = await Institution.find({}).sort({ createdAt: -1 });
+    const list = await Institution.find({})
+      .select("name institution_id location maxBranches")
+      .sort({ createdAt: -1 });
     res.json(list);
   } catch (err) {
     console.error("GET INSTITUTIONS ERROR:", err);
@@ -72,7 +76,15 @@ router.get("/institutions", async (req, res) => {
 
 router.post("/institutions", async (req, res) => {
   try {
-    const inst = new Institution(req.body);
+    const inst = new Institution({
+      name: req.body.name,
+      institution_id: req.body.institution_id,
+      location: req.body.location,
+      maxBranches:
+        typeof req.body.maxBranches === "number"
+          ? req.body.maxBranches
+          : 7
+    });
     await inst.save();
     res.status(201).json(inst);
   } catch (err) {
@@ -83,9 +95,19 @@ router.post("/institutions", async (req, res) => {
 
 router.put("/institutions/:id", async (req, res) => {
   try {
-    const inst = await Institution.findByIdAndUpdate(req.params.id, req.body, {
-      new: true
-    });
+    const inst = await Institution.findByIdAndUpdate(
+      req.params.id,
+      {
+        name: req.body.name,
+        institution_id: req.body.institution_id,
+        location: req.body.location,
+        maxBranches:
+          typeof req.body.maxBranches === "number"
+            ? req.body.maxBranches
+            : 7
+      },
+      { new: true }
+    );
     res.json(inst);
   } catch (err) {
     console.error("UPDATE INSTITUTION ERROR:", err);
@@ -103,9 +125,94 @@ router.delete("/institutions/:id", async (req, res) => {
   }
 });
 
-/* ----- INSTITUTION ADMINS (SUPER ADMINS) CRUD ----- */
+/* ----- BRANCH CREATE WITH LIMIT ----- */
+// POST /api/company/branches
+router.post("/branches", async (req, res) => {
+  try {
+    const { institution_id, branch_name, location } = req.body;
 
-// List institution admins
+    if (!institution_id || !branch_name) {
+      return res
+        .status(400)
+        .json({ message: "Institution and branch name are required" });
+    }
+
+    const inst = await Institution.findById(institution_id).select(
+      "maxBranches"
+    );
+    if (!inst) {
+      return res.status(404).json({ message: "Institution not found" });
+    }
+
+    const currentCount = await Branch.countDocuments({ institution_id });
+    const limit = inst.maxBranches || 7;
+
+    if (currentCount >= limit) {
+      return res.status(400).json({
+        message: `Branch limit reached. This institution allows only ${limit} branches.`
+      });
+    }
+
+    const branch = new Branch({
+      institution_id,
+      branch_name,
+      location
+    });
+    await branch.save();
+
+    res.status(201).json(branch);
+  } catch (err) {
+    console.error("CREATE BRANCH ERROR:", err);
+    res.status(400).json({ message: "Could not create branch" });
+  }
+});
+
+/* ----- LOGO UPLOAD (image stored in DB) ----- */
+router.post(
+  "/institutions/:id/logo",
+  upload.single("logo"),
+  async (req, res) => {
+    try {
+      const inst = await Institution.findById(req.params.id);
+      if (!inst) {
+        return res.status(404).json({ message: "Institution not found" });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: "Logo file is required" });
+      }
+
+      inst.logo = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+      };
+
+      await inst.save();
+      res.json({ message: "Logo uploaded" });
+    } catch (err) {
+      console.error("UPLOAD LOGO ERROR:", err);
+      res.status(400).json({ message: "Could not upload logo" });
+    }
+  }
+);
+
+/* ----- LOGO FETCH (serve as image) ----- */
+router.get("/institutions/:id/logo", async (req, res) => {
+  try {
+    const inst = await Institution.findById(req.params.id).select("logo");
+    if (!inst || !inst.logo || !inst.logo.data) {
+      return res.status(404).send("No logo");
+    }
+
+    res.set("Content-Type", inst.logo.contentType || "image/png");
+    res.send(inst.logo.data);
+  } catch (err) {
+    console.error("GET LOGO ERROR:", err);
+    res.status(400).send("Error loading logo");
+  }
+});
+
+/* ----- INSTITUTION ADMINS CRUD ----- */
+
 router.get("/admins", async (req, res) => {
   try {
     const admins = await User.find({ role: "institution_admin" })
@@ -118,7 +225,6 @@ router.get("/admins", async (req, res) => {
   }
 });
 
-// Create institution admin
 router.post("/admins", async (req, res) => {
   try {
     console.log("CREATE ADMIN BODY:", req.body);
@@ -157,7 +263,6 @@ router.post("/admins", async (req, res) => {
   }
 });
 
-// Update institution admin
 router.put("/admins/:id", async (req, res) => {
   try {
     const { name, email, phone, institution_id, status } = req.body;
@@ -173,7 +278,6 @@ router.put("/admins/:id", async (req, res) => {
   }
 });
 
-// Delete institution admin
 router.delete("/admins/:id", async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
@@ -185,7 +289,6 @@ router.delete("/admins/:id", async (req, res) => {
 });
 
 /* ----- GLOBAL REPORT (JSON + CSV) ----- */
-// GET /api/company/report/global
 router.get("/report/global", async (req, res) => {
   try {
     const { institutionId, branchId, format } = req.query;
@@ -197,7 +300,6 @@ router.get("/report/global", async (req, res) => {
       ? { branch_id: new mongoose.Types.ObjectId(branchId) }
       : {};
 
-    // institution-wise stats
     const [studentInst, staffInst, feeInst, instDocs] = await Promise.all([
       Student.aggregate([
         { $match: instMatch },
@@ -263,7 +365,6 @@ router.get("/report/global", async (req, res) => {
       fee: r.fee
     }));
 
-    // branch-wise stats
     const branchMatchAll = {
       ...instMatch,
       ...branchMatch
@@ -282,7 +383,7 @@ router.get("/report/global", async (req, res) => {
         { $match: branchMatchAll },
         { $group: { _id: "$branch_id", totalFee: { $sum: "$amount" } } }
       ]),
-      Branch.find(branchMatchAll).select("branch_name institution_id")
+        Branch.find(branchMatchAll).select("branch_name institution_id")
     ]);
 
     const branchNameById = new Map(
@@ -380,4 +481,4 @@ router.get("/report/global", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
