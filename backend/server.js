@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 const MONGO_URL =
+ // process.env.MONGO_URL ||"mongodb+srv://DTW:secret123@cluster0.vwhagph.mongodb.net/DTW?appName=Cluster0";
   process.env.MONGO_URL || "mongodb://127.0.0.1:27017/first-crop_db";
 
 mongoose

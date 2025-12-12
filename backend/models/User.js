@@ -1,23 +1,44 @@
+// models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+
     email: { type: String, required: true, unique: true },
-    phone: String,
+
+    phone: { type: String },
+
     password_hash: { type: String, required: true },
 
     role: {
       type: String,
-      enum: ["super_admin", "institution_admin", "branch_admin", "staff", "parent"],
+      enum: [
+        "company_admin",
+        "institution_admin",
+        "branch_admin",
+        "staff",
+        "parent"
+      ],
       required: true
     },
 
-    institution_id: { type: mongoose.Schema.Types.ObjectId, ref: "Institution" },
-    branch_id: { type: mongoose.Schema.Types.ObjectId, ref: "Branch" },
+    institution_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institution"
+    },
 
-    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    branch_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Branch"
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active"
+    },
 
     resetToken: String,
     resetTokenExpiry: Date
