@@ -1,64 +1,83 @@
-/* MAIN CONTAINER */
+/* MAIN LAYOUT */
 .enterprise-container {
   display: flex;
   min-height: 100vh;
-  background: #f3f4f6;
+  background: #eef1f6;
 }
 
-/* LEFT PANEL */
+/* LEFT SECTION */
 .enterprise-left {
   flex: 1.2;
-  background: linear-gradient(135deg, #4f46e5, #4338ca);
-  color: white;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
   padding: 60px 50px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-.left-content h1 {
-  font-size: 42px;
-  font-weight: 700;
-  margin-bottom: 18px;
+/* LOGO */
+.left-logo {
+  width: 180px;
+  height: auto;
+  margin-bottom: 30px;
+  filter: drop-shadow(0px 10px 25px rgba(0, 0, 0, 0.25));
 }
 
-.left-content p {
+/* TITLE + PARAGRAPH */
+.left-text {
+  max-width: 420px;
+}
+
+.left-title {
+  font-size: 38px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.left-text p {
   font-size: 17px;
   line-height: 1.6;
-  max-width: 80%;
+  opacity: 0.95;
 }
 
-.left-illustration {
-  height: 260px;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 16px;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-/* RIGHT PANEL */
+/* RIGHT SECTION */
 .enterprise-right {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  background: linear-gradient(
+      145deg,
+      rgba(79, 70, 229, 0.08),
+      rgba(67, 56, 202, 0.05)
+    ),
+    #f9fafb;
   padding: 40px;
 }
 
-/* FORM BOX */
-.form-box {
+/* GLASS EFFECT LOGIN CARD */
+.glass-card {
   width: 100%;
-  max-width: 420px;
-  background: white;
+  max-width: 430px;
   padding: 40px 35px;
-  border-radius: 14px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(15px);
+
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.10);
 }
 
-.form-box h2 {
+/* FORM HEADINGS */
+.glass-card h2 {
   font-size: 30px;
   font-weight: 700;
-  margin-bottom: 6px;
 }
 
 .form-sub {
@@ -68,12 +87,11 @@
 
 /* INPUT FIELDS */
 .field {
-  display: flex;
-  flex-direction: column;
   margin-bottom: 20px;
 }
 
 .field label {
+  display: block;
   margin-bottom: 6px;
   font-size: 15px;
   font-weight: 600;
@@ -81,45 +99,47 @@
 }
 
 .field input {
-  padding: 12px 14px;
-  border-radius: 8px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
   border: 1px solid #d1d5db;
+  background: #fff;
   font-size: 15px;
   outline: none;
 }
 
 .field input:focus {
   border-color: #4f46e5;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.18);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
 /* BUTTON */
 .primary-btn {
   width: 100%;
   padding: 14px;
+  border-radius: 12px;
   border: none;
-  background: #4f46e5;
-  color: white;
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  color: #fff;
   font-size: 17px;
   font-weight: 600;
-  border-radius: 10px;
   cursor: pointer;
-  margin-top: 8px;
-  transition: 0.2s;
+  margin-top: 10px;
+  transition: 0.25s;
 }
 
 .primary-btn:hover {
-  background: #4338ca;
+  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
-/* ERROR */
+/* ERROR BOX */
 .error {
   background: #fee2e2;
   color: #b91c1c;
   padding: 10px;
   border-radius: 8px;
-  margin-bottom: 10px;
-  font-size: 14px;
+  margin-bottom: 12px;
 }
 
 /* FORGOT LINK */
@@ -130,8 +150,8 @@
 
 .forgot-link a {
   color: #4f46e5;
-  text-decoration: none;
   font-size: 14px;
+  text-decoration: none;
 }
 
 .forgot-link a:hover {
@@ -145,20 +165,10 @@
   }
 
   .enterprise-left {
-    flex: none;
-    height: 300px;
     padding: 40px;
   }
 
-  .left-content p {
-    max-width: 100%;
-  }
-
-  .enterprise-right {
-    padding: 30px;
-  }
-
-  .form-box {
-    padding: 30px;
+  .left-logo {
+    width: 150px;
   }
 }

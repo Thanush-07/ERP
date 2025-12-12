@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./styles/Login.css";
-import { Link } from "react-router-dom";
+import ematixLogo from "../../assets/ematix.png";
 
 const API_URL = "http://localhost:5000/api/auth/login";
 
@@ -21,29 +21,16 @@ export default function Login() {
     try {
       const res = await axios.post(API_URL, { email, password });
       const { token, user } = res.data;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.role);
-
-      switch (user.role) {
-        case "company_admin":
-           navigate("/company-admin/dashboard");
-          break;
-        case "institution_admin":
-           navigate("/institution/dashboard");
-          break;
-        case "branch_admin":
-          navigate("/branch-admin/dashboard");
-          break;
-        case "staff":
-          navigate("/staff/dashboard");
-          break;
-        case "parent":
-          navigate("/parent/dashboard");
-          break;
-        default:
-          setError("Unknown role");
-      }
+localStorage.setItem("token", res.data.token);
+localStorage.setItem("user", JSON.stringify(res.data.user));
+if (res.data.user.role === "company_admin") {
+  navigate("/company");
+} else if (res.data.user.role === "institution_admin") {
+  navigate("/institution");
+} else if (res.data.user.role === "branch_admin") {
+  navigate("/branch");
+}
+      
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
     } finally {
@@ -53,24 +40,23 @@ export default function Login() {
 
   return (
     <div className="enterprise-container">
-      
-      {/* LEFT PANEL */}
+
+      {/* LEFT SIDE */}
       <div className="enterprise-left">
-        <div className="left-content">
-          <h1>Ematix  School ERP System</h1>
+        <img src={ematixLogo} alt="Ematix Logo" className="left-logo" />
+
+        <div className="left-text">
+          <h1 className="left-title">Ematix School Management ERP</h1>
           <p>
-            Manage institutions, staff, students, attendance, and parents from a single dashboard.
-            A complete enterprise-level education management solution.
+            A complete cloud-based enterprise school management system. 
+            Manage students, staff, attendance, academics, fees & more.
           </p>
         </div>
-        {/* <div className="left-illustration">
-           You can add an SVG or image here 
-        </div> */}
       </div>
 
-      {/* RIGHT PANEL */}
+      {/* RIGHT SIDE */}
       <div className="enterprise-right">
-        <div className="form-box">
+        <div className="form-box glass-card">
           <h2>Welcome Back</h2>
           <p className="form-sub">Login to your account</p>
 
@@ -103,13 +89,12 @@ export default function Login() {
               {loading ? "Signing in..." : "Login"}
             </button>
 
-            <div className="auth-footer">
-  <Link to="/forgot-password">Forgot password?</Link>
-</div>
+            <div className="forgot-link">
+              <Link to="/forgot-password">Forgot password?</Link>
+            </div>
           </form>
         </div>
       </div>
-
     </div>
   );
 }
