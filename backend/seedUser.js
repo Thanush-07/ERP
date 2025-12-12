@@ -1,7 +1,9 @@
 // seedUser.js
-const mongoose = require("mongoose");
-const User = require("./models/User");
-require("dotenv").config();
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { User } from "./models/User.js";
+
+dotenv.config();
 
 const MONGO_URL =
   process.env.MONGO_URL || "mongodb://127.0.0.1:27017/first-crop_db";
@@ -10,7 +12,7 @@ async function createUserIfMissing() {
   await mongoose.connect(MONGO_URL);
   console.log("Mongo connected for seeding");
 
-  const email = "companyadmin@example.com";
+  const email = "companyadmin@erp.com";
 
   let user = await User.findOne({ email });
   if (user) {
