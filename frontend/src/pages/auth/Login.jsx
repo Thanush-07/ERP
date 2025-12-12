@@ -26,10 +26,10 @@ export default function Login() {
       localStorage.setItem("role", user.role);
 
       switch (user.role) {
-        case "super_admin":
+        case "company_admin":
            navigate("/company-admin/dashboard");
           break;
-        case "institution_admin":
+        case "super_admin":
            navigate("/super-admin/dashboard");
           break;
         case "branch_admin":
@@ -57,7 +57,7 @@ export default function Login() {
       {/* LEFT PANEL */}
       <div className="enterprise-left">
         <div className="left-content">
-          <h1>First Crop Montessori School ERP System</h1>
+          <h1>Ematix  School ERP System</h1>
           <p>
             Manage institutions, staff, students, attendance, and parents from a single dashboard.
             A complete enterprise-level education management solution.
