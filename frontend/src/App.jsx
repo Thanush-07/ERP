@@ -33,7 +33,7 @@ function App() {
 
         {/* Institution admin module with layout */}
         <Route path="/InstitutionDashboard" element={<InstitutionDashboard />} />  
-        <Route path="/institution/*" element={<InstitutionLayout />} />
+        {/*<Route path="/institution/*" element={<InstitutionLayout />} />*/}
  {/* Other roles */}
         <Route path="/branch-admin/dashboard" element={<BranchAdminDashboard />} />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
