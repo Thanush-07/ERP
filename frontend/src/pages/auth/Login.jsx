@@ -1,3 +1,4 @@
+// src/pages/Auth/Login.jsx
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
@@ -19,18 +20,25 @@ export default function Login() {
     setLoading(true);
 
     try {
+      // 1) Send request to backend
       const res = await axios.post(API_URL, { email, password });
+
+      // 2) Get token and user from response
       const { token, user } = res.data;
-localStorage.setItem("token", res.data.token);
-localStorage.setItem("user", JSON.stringify(res.data.user));
-if (res.data.user.role === "company_admin") {
-  navigate("/company");
-} else if (res.data.user.role === "institution_admin") {
-  navigate("/institution");
-} else if (res.data.user.role === "branch_admin") {
-  navigate("/branch");
-}
-      
+
+      // 3) Save to localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // 4) Redirect based on role
+      if (user.role === "company_admin") {
+        navigate("/company-admin/dashboard");
+      } else if (user.role === "institution_admin") {
+        navigate("/institution/dashboard");
+      } else {
+        // fallback if some other role
+        navigate("/");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
     } finally {
@@ -40,7 +48,6 @@ if (res.data.user.role === "company_admin") {
 
   return (
     <div className="enterprise-container">
-
       {/* LEFT SIDE */}
       <div className="enterprise-left">
         <img src={ematixLogo} alt="Ematix Logo" className="left-logo" />
@@ -48,7 +55,7 @@ if (res.data.user.role === "company_admin") {
         <div className="left-text">
           <h1 className="left-title">Ematix School Management ERP</h1>
           <p>
-            A complete cloud-based enterprise school management system. 
+            A complete cloud-based enterprise school management system.
             Manage students, staff, attendance, academics, fees & more.
           </p>
         </div>
