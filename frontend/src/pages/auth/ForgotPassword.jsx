@@ -1,6 +1,9 @@
+// src/pages/Auth/ForgotPassword.jsx
 import { useState } from "react";
 import axios from "axios";
-import "./styles/ForgotPassword.css";
+import { Link } from "react-router-dom";
+import "./styles/Login.css"; // reuse the same CSS
+import ematixLogo from "../../assets/ematix.png";
 
 const API_URL = "http://localhost:5000/api/auth/forgot-password";
 
@@ -27,38 +30,49 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="fp-wrapper">
-      <div className="fp-card">
-
-        <div className="fp-header">
-          <h2>Forgot Password</h2>
-          <p>Enter your registered email to receive a password reset link.</p>
+    <div className="enterprise-container">
+      {/* LEFT SIDE */}
+      <div className="enterprise-left">
+        <img src={ematixLogo} alt="Ematix Logo" className="left-logo" />
+        <div className="left-text">
+          <h1 className="left-title">Ematix School Management ERP</h1>
+          <p>
+            A complete cloud-based enterprise school management system.
+            Manage students, staff, attendance, academics, fees & more.
+          </p>
         </div>
+      </div>
 
-        <form className="fp-form" onSubmit={handleSubmit}>
-          <div className="fp-field">
-            <label>Email Address</label>
-            <input
-              type="email"
-              placeholder="admin@school.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+      {/* RIGHT SIDE */}
+      <div className="enterprise-right">
+        <div className="form-box glass-card">
+          <h2>Forgot Password</h2>
+          <p className="form-sub">Enter your registered email</p>
 
-          {msg && <p className="fp-success">{msg}</p>}
-          {error && <p className="fp-error">{error}</p>}
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="admin@school.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-          <button type="submit" className="fp-button" disabled={loading}>
-            {loading ? "Sending..." : "Send Reset Link"}
-          </button>
+            {msg && <div className="success">{msg}</div>}
+            {error && <div className="error">{error}</div>}
 
-          <div className="fp-footer">
-            <a href="/login">Back to Login</a>
-          </div>
-        </form>
+            <button type="submit" className="primary-btn" disabled={loading}>
+              {loading ? "Sending..." : "Send Reset Link"}
+            </button>
 
+            <div className="forgot-link">
+              <Link to="/login">Back to Login</Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
