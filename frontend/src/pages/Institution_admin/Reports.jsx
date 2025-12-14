@@ -11,7 +11,6 @@ export default function InstitutionReports() {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // logged-in institution admin
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const institutionId = user.institutionId || user.institution_id || null;
 
@@ -23,7 +22,10 @@ export default function InstitutionReports() {
       );
       setBranches(res.data);
     } catch (err) {
-      console.error("INSTITUTION REPORT BRANCHES ERROR", err);
+      console.error(
+        "INSTITUTION REPORT BRANCHES ERROR",
+        err.response?.data || err.message
+      );
     }
   };
 
@@ -39,7 +41,10 @@ export default function InstitutionReports() {
       );
       setStats(res.data.branches || []);
     } catch (err) {
-      console.error("INSTITUTION REPORT ERROR", err);
+      console.error(
+        "INSTITUTION REPORT ERROR",
+        err.response?.data || err.message
+      );
     } finally {
       setLoading(false);
     }

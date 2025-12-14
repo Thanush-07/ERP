@@ -1,6 +1,8 @@
+// src/pages/Institution_admin/ChangePassword.jsx
 import { useState } from "react";
 import axios from "axios";
-import "../Company_admin/styles/CompanyDashboard.css";
+import "../Institution_admin/styles/ChangePassword.css";
+import "../Institution_admin/styles/Dashboard.css";
 
 const API_URL = "http://localhost:5000/api/auth/change-password";
 
@@ -34,7 +36,7 @@ export default function ChangePassword() {
       const res = await axios.post(API_URL, {
         userId,
         currentPassword,
-        newPassword
+        newPassword,
       });
       setMsg(res.data.message || "Password updated successfully.");
       setCurrentPassword("");
@@ -49,17 +51,18 @@ export default function ChangePassword() {
     }
   };
 
-  return (
-    <div className="dash-wrapper">
-      <div className="dash-header">
+return (
+  <div className="dash-wrapper">
+    <div className="dash-inner cp-inner">
+      <div className="dash-header cp-header">
         <div>
           <h1>Change Password</h1>
           <p>Update your institution admin account password.</p>
         </div>
       </div>
 
-      <div className="dash-card" style={{ maxWidth: 480 }}>
-        <form className="inst-form" onSubmit={handleSubmit}>
+      <div className="cp-card">
+          <form className="inst-form" onSubmit={handleSubmit}>
           <div className="fp-field">
             <label>Current password</label>
             <input
@@ -99,5 +102,6 @@ export default function ChangePassword() {
         </form>
       </div>
     </div>
-  );
+  </div>
+);
 }

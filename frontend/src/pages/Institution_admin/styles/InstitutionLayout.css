@@ -128,16 +128,12 @@
 .main {
   flex: 1;
   min-width: 0;
-  background: radial-gradient(circle at top left, #1f2937, #020617 55%);
+  background: #f3f4f6; /* changed from dark gradient */
   padding: 24px;
   position: relative;
   z-index: 10;
 }
 
-.main-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
 /* Backdrop for mobile when sidebar is open */
 .backdrop {
