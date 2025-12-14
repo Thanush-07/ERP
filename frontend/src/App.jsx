@@ -1,26 +1,33 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
+// authentication
 import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-
+// company admin
 import CompanyLayout from "./pages/Company_admin/components/CompanyLayout";
 import CompanyAdminDashboard from "./pages/Company_admin/Dashboard";
 import Institutions from "./pages/Company_admin/Institutions";
 import Users from "./pages/Company_admin/Users";
 import GlobalReport from "./pages/Company_admin/GlobalReport";
-
 // Institution admin
 import InstitutionLayout from "./pages/Institution_admin/InstitutionLayout";
 import InstitutionDashboard from "./pages/Institution_admin/Dashboard";
 import InstitutionBranches from "./pages/Institution_admin/Branches";
-// TODO: create these files/components:
 import BranchAdmins from "./pages/Institution_admin/Branches";
 import InstitutionReports from "./pages/Institution_admin/Reports";
 import ChangePassword from "./pages/Institution_admin/ChangePassword";
-
+// Branch admin
+import BranchLayout from "./pages/Branch_admin/BranchLayout";
+import BranchDashboard from "./pages/Branch_admin/Dashboard";
+import BranchStudents from "./pages/Branch_admin/Students";
+import BranchFees from "./pages/Branch_admin/Fees";
+import BranchSales from "./pages/Branch_admin/Sales";
+import BranchInventory from "./pages/Branch_admin/Inventory";
+import BranchExpenses from "./pages/Branch_admin/Expenses";
+import BranchBuses from "./pages/Branch_admin/Buses";
+import BranchStaff from "./pages/Branch_admin/Staff";
+import BranchReports from "./pages/Branch_admin/Reports";
 // Other roles
-import BranchAdminDashboard from "./pages/Branch_admin/Dashboard";
 import StaffDashboard from "./pages/Staff/Dashboard";
 import ParentDashboard from "./pages/Parent/Dashboard";
 
@@ -49,12 +56,19 @@ function App() {
           <Route path="reports" element={<InstitutionReports />} />
           <Route path="change-password" element={<ChangePassword />} />
         </Route>
-
+        {/* Branch admin module with layout */}
+         <Route path="/branch" element={<BranchLayout />}>
+         <Route path="dashboard" element={<BranchDashboard />} />
+         <Route path="students" element={<BranchStudents />} />
+         <Route path="fees" element={<BranchFees />} />
+         <Route path="sales" element={<BranchSales />} />
+        <Route path="inventory" element={<BranchInventory />} />
+       <Route path="expenses" element={<BranchExpenses />} />
+       <Route path="buses" element={<BranchBuses />} />
+        <Route path="staff" element={<BranchStaff />} />
+         <Route path="reports" element={<BranchReports />} />
+      </Route>
         {/* Other roles */}
-        <Route
-          path="/branch-admin/dashboard"
-          element={<BranchAdminDashboard />}
-        />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/parent/dashboard" element={<ParentDashboard />} />
 
