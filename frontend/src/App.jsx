@@ -57,17 +57,17 @@ function App() {
           <Route path="change-password" element={<ChangePassword />} />
         </Route>
         {/* Branch admin module with layout */}
-         <Route path="/branch" element={<BranchLayout />}>
-         <Route path="dashboard" element={<BranchDashboard />} />
-         <Route path="students" element={<BranchStudents />} />
-         <Route path="fees" element={<BranchFees />} />
-         <Route path="sales" element={<BranchSales />} />
-        <Route path="inventory" element={<BranchInventory />} />
-       <Route path="expenses" element={<BranchExpenses />} />
-       <Route path="buses" element={<BranchBuses />} />
-        <Route path="staff" element={<BranchStaff />} />
-         <Route path="reports" element={<BranchReports />} />
-      </Route>
+        <Route path="/branch" element={<BranchLayout />}>
+          <Route path="dashboard" element={<BranchDashboard />} />
+          <Route path="students" element={<BranchStudents />} />
+          <Route path="fees" element={<BranchFees />} />
+          <Route path="sales" element={<BranchSales />} />
+          <Route path="inventory" element={<BranchInventory />} />
+          <Route path="expenses" element={<BranchExpenses />} />
+          <Route path="buses" element={<BranchBuses />} />
+          <Route path="staff" element={<BranchStaff />} />
+          <Route path="reports" element={<BranchReports />} />
+        </Route>
         {/* Other roles */}
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/parent/dashboard" element={<ParentDashboard />} />
