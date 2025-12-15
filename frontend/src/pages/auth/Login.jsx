@@ -35,6 +35,8 @@ export default function Login() {
         navigate("/company-admin/dashboard");
       } else if (user.role === "institution_admin") {
         navigate("/institution/dashboard");
+      } else if (user.role === "branch_admin") {
+        navigate("/branch/dashboard");
       } else {
         // fallback if some other role
         navigate("/");
