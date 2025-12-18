@@ -29,7 +29,12 @@ import BranchReports from "./pages/Branch_admin/Reports";
 import BranchChangePassword from "./pages/Branch_admin/ChangePasswordNew";
 import BranchStaffManagement from "./pages/Branch_admin/StaffManagement";
 // Other roles
+import StaffLayout from "./pages/Staff/StaffLayout";
 import StaffDashboard from "./pages/Staff/Dashboard";
+import StaffAttendance from "./pages/Staff/Attendance";
+import StaffReports from "./pages/Staff/Reports";
+import StaffCollectFee from "./pages/Staff/CollectFee";
+import StaffChangePassword from "./pages/Staff/ChangePassword";
 import ParentDashboard from "./pages/Parent/Dashboard";
 
 function App() {
@@ -70,8 +75,16 @@ function App() {
           <Route path="change-password" element={<BranchChangePassword />} />
           <Route path="reports" element={<BranchReports />} />
         </Route>
+        {/* Staff module with layout */}
+        <Route path="/staff" element={<StaffLayout />}>
+          <Route path="dashboard" element={<StaffDashboard />} />
+          <Route path="attendance" element={<StaffAttendance />} />
+          <Route path="reports" element={<StaffReports />} />
+          <Route path="collect-fee" element={<StaffCollectFee />} />
+          <Route path="change-password" element={<StaffChangePassword />} />
+        </Route>
+
         {/* Other roles */}
-        <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/parent/dashboard" element={<ParentDashboard />} />
 
         {/* Fallback */}

@@ -7,6 +7,7 @@ export default function Students() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [viewingStudent, setViewingStudent] = useState(null);
   const [filters, setFilters] = useState({
     status: "all",
     class: "all",
@@ -32,7 +33,10 @@ export default function Students() {
     residency: "hosteller", // 'hosteller' or 'day-scholar'
     busFees: "",
     hostelFees: "",
-    emisNo: ""
+    emisNo: "",
+    image: "",
+    aadharCardNumber: "",
+    rationCardNumber: ""
   });
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -125,6 +129,17 @@ export default function Students() {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData({ ...formData, image: event.target.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters({ ...filters, [name]: value });
@@ -147,7 +162,10 @@ export default function Students() {
       residency: "hosteller",
       busFees: "",
       hostelFees: "",
-      emisNo: ""
+      emisNo: "",
+      image: "",
+      aadharCardNumber: "",
+      rationCardNumber: ""
     });
     setEditingStudent(null);
     setShowForm(false);
@@ -183,6 +201,8 @@ export default function Students() {
       // remove local-only fields we don't want to send if backend expects parentName
       delete payload.motherName;
       delete payload.fatherName;
+
+      // Keep image, aadharCardNumber, rationCardNumber in payload
 
       console.log("Student payload:", payload);
 
@@ -236,7 +256,10 @@ export default function Students() {
       residency: student.residency || "hosteller",
       busFees: student.busFees || "",
       hostelFees: student.hostelFees || "",
-      emisNo: student.emisNo || ""
+      emisNo: student.emisNo || "",
+      image: student.image || "",
+      aadharCardNumber: student.aadharCardNumber || "",
+      rationCardNumber: student.rationCardNumber || ""
     });
     setShowForm(true);
   };
@@ -328,6 +351,18 @@ export default function Students() {
         <div className="student-form-container">
           <form className="student-form" onSubmit={handleSubmit}>
             <h3>{editingStudent ? "Edit Student" : "Add New Student"}</h3>
+
+            <div className="image-upload-section">
+              <label className="image-label">
+                Student Photo
+                <input type="file" accept="image/*" onChange={handleImageUpload} />
+              </label>
+              {formData.image && (
+                <div className="image-preview">
+                  <img src={formData.image} alt="Student preview" />
+                </div>
+              )}
+            </div>
 
             <div className="form-row">
               <div className="form-group">
@@ -525,6 +560,30 @@ export default function Students() {
             </div>
 
             <div className="form-row">
+              <div className="form-group">
+                <label>Aadhar Card Number (optional)</label>
+                <input
+                  type="text"
+                  name="aadharCardNumber"
+                  value={formData.aadharCardNumber}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 1234-5678-9012"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Ration Card Number (optional)</label>
+                <input
+                  type="text"
+                  name="rationCardNumber"
+                  value={formData.rationCardNumber}
+                  onChange={handleInputChange}
+                  placeholder="e.g. RC-001234"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
               <div className="form-group full-width">
                 <label>Address *</label>
                 <textarea
@@ -619,7 +678,7 @@ export default function Students() {
               </thead>
               <tbody>
                 {students.map((student) => (
-                  <tr key={student._id}>
+                  <tr key={student._id} onClick={() => setViewingStudent(student)} style={{ cursor: "pointer" }}>
                     <td>{student.admissionNumber}</td>
                     <td>{student.name}</td>
                     <td>{student.class}</td>
@@ -638,13 +697,13 @@ export default function Students() {
                     <td>
                       <button
                         className="edit-btn"
-                        onClick={() => handleEdit(student)}
+                        onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
                       >
                         Edit
                       </button>
                       <button
                         className="delete-btn"
-                        onClick={() => handleDelete(student._id)}
+                        onClick={(e) => { e.stopPropagation(); handleDelete(student._id); }}
                       >
                         Delete
                       </button>
@@ -656,6 +715,96 @@ export default function Students() {
           </div>
         )}
       </div>
+
+      {/* Student Detail Modal */}
+      {viewingStudent && (
+        <div className="modal-overlay" onClick={() => setViewingStudent(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Student Details</h2>
+              <button className="modal-close" onClick={() => setViewingStudent(null)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              {viewingStudent?.image && (
+                <div className="modal-image">
+                  <img src={viewingStudent.image} alt={viewingStudent.name} />
+                </div>
+              )}
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <label>Admission Number</label>
+                  <p>{viewingStudent?.admissionNumber}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Name</label>
+                  <p>{viewingStudent?.name}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Roll No</label>
+                  <p>{viewingStudent?.rollNo}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Class</label>
+                  <p>{viewingStudent?.class}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Section</label>
+                  <p>{viewingStudent?.section}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Mother Name</label>
+                  <p>{viewingStudent?.motherName || "N/A"}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Father Name</label>
+                  <p>{viewingStudent?.fatherName || "N/A"}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Phone No</label>
+                  <p>{viewingStudent?.phoneNo}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Aadhar Card Number</label>
+                  <p>{viewingStudent?.aadharCardNumber || "N/A"}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Ration Card Number</label>
+                  <p>{viewingStudent?.rationCardNumber || "N/A"}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Address</label>
+                  <p>{viewingStudent?.address || "N/A"}</p>
+                </div>
+                <div className="detail-item">
+                  <label>Status</label>
+                  <p><span className="status-badge" style={{ backgroundColor: getStatusColor(viewingStudent?.status) }}>{viewingStudent?.status}</span></p>
+                </div>
+                <div className="detail-item">
+                  <label>Academic Year</label>
+                  <p>{viewingStudent?.academicYear || "N/A"}</p>
+                </div>
+              </div>
+              {viewingStudent?.customFields && viewingStudent.customFields.length > 0 && (
+                <div className="custom-fields-display">
+                  <h4>Custom Fields (Added by Staff)</h4>
+                  <div className="custom-fields-grid">
+                    {viewingStudent.customFields.map((field, idx) => (
+                      <div key={idx} className="detail-item">
+                        <label>{field.key}</label>
+                        <p>{field.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-primary" onClick={() => { setViewingStudent(null); handleEdit(viewingStudent); }}>Edit Student</button>
+              <button className="btn-ghost" onClick={() => setViewingStudent(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

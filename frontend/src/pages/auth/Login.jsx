@@ -37,6 +37,10 @@ export default function Login() {
         navigate("/institution/dashboard");
       } else if (user.role === "branch_admin") {
         navigate("/branch/dashboard");
+      } else if (user.role === "staff") {
+        navigate("/staff/dashboard");
+      } else if (user.role === "parent") {
+        navigate("/parent/dashboard");
       } else {
         // fallback if some other role
         navigate("/");
