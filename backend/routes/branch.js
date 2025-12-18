@@ -7,6 +7,7 @@ import { Branch } from "../models/Branch.js";
 import { Student } from "../models/Student.js";
 import { FeePayment } from "../models/FeePayment.js";
 import { User } from "../models/User.js";
+import { FeeStructure } from "../models/FeeStructure.js";
 
 const router = express.Router();
 
@@ -491,6 +492,16 @@ router.post("/:branchId/staff", upload.single("photo"), async (req, res) => {
       password_hash: "",
     });
 
+    // handle classes if provided (stringified JSON or comma-separated)
+    if (req.body.classes) {
+      let classes = req.body.classes;
+      if (typeof classes === 'string') {
+        try { classes = JSON.parse(classes); }
+        catch(e) { classes = classes.split(',').map(s=>s.trim()).filter(Boolean); }
+      }
+      if (Array.isArray(classes)) staff.classes = classes;
+    }
+
     // Set default password
     await staff.setPassword("Staff@123");
 
@@ -528,6 +539,17 @@ router.put("/:branchId/staff/:staffId", upload.single("photo"), async (req, res)
     // Convert age to number if provided
     if (updateData.age) {
       updateData.age = Number(updateData.age);
+    }
+
+    // handle classes update (might be JSON string or comma separated)
+    if (updateData.classes) {
+      let classes = updateData.classes;
+      if (typeof classes === 'string') {
+        try { classes = JSON.parse(classes); }
+        catch(e) { classes = classes.split(',').map(s=>s.trim()).filter(Boolean); }
+      }
+      if (Array.isArray(classes)) updateData.classes = classes;
+      else delete updateData.classes;
     }
 
     // Handle photo upload
@@ -838,6 +860,74 @@ router.post("/:branchId/students/generate-admission-number", async (req, res) =>
   } catch (err) {
     console.error("GENERATE ADMISSION NUMBER ERROR:", err);
     res.status(500).json({ message: "Failed to generate admission number" });
+  }
+});
+
+// GET /api/branch/:branchId/fee-structures
+router.get("/:branchId/fee-structures", async (req, res) => {
+  try {
+    const { branchId } = req.params;
+    const structures = await FeeStructure.find({ branch_id: branchId }).sort({ class: 1 });
+    res.json(structures);
+  } catch (err) {
+    console.error("GET FEE STRUCTURES ERROR:", err);
+    res.status(500).json({ message: "Failed to load fee structures" });
+  }
+});
+
+// POST /api/branch/:branchId/fee-structures
+router.post("/:branchId/fee-structures", async (req, res) => {
+  try {
+    const { branchId } = req.params;
+    const { class: cls, categories } = req.body;
+    if (!cls || !categories) return res.status(400).json({ message: "Class and categories are required" });
+    const branch = await Branch.findById(branchId);
+    if (!branch) return res.status(404).json({ message: "Branch not found" });
+    const fs = new FeeStructure({ institution_id: branch.institution_id, branch_id: branchId, class: cls, categories });
+    await fs.save();
+    res.status(201).json(fs);
+  } catch (err) {
+    console.error("CREATE FEE STRUCTURE ERROR:", err);
+    res.status(500).json({ message: "Failed to create fee structure" });
+  }
+});
+
+// GET /api/branch/:branchId/fees
+router.get("/:branchId/fees", async (req, res) => {
+  try {
+    const { branchId } = req.params;
+    const fees = await FeePayment.find({ branch_id: branchId }).sort({ createdAt: -1 });
+    res.json(fees);
+  } catch (err) {
+    console.error("GET FEES ERROR:", err);
+    res.status(500).json({ message: "Failed to load fees" });
+  }
+});
+
+// POST /api/branch/:branchId/fees
+router.post("/:branchId/fees", async (req, res) => {
+  try {
+    const { branchId } = req.params;
+    const { amount, studentId, studentName, category, date, mode, class: cls } = req.body;
+    if (!amount) return res.status(400).json({ message: "Amount is required" });
+    const branch = await Branch.findById(branchId);
+    if (!branch) return res.status(404).json({ message: "Branch not found" });
+    const payment = new FeePayment({
+      institution_id: branch.institution_id,
+      branch_id: branchId,
+      amount: Number(amount),
+      studentId,
+      studentName,
+      category,
+      date: date ? new Date(date) : new Date(),
+      mode,
+      class: cls
+    });
+    await payment.save();
+    res.status(201).json(payment);
+  } catch (err) {
+    console.error("CREATE FEE PAYMENT ERROR:", err);
+    res.status(500).json({ message: "Failed to create fee payment" });
   }
 });
 

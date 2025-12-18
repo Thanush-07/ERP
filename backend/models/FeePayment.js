@@ -13,9 +13,25 @@ const feePaymentSchema = new mongoose.Schema(
       ref: "Branch",
       required: true
     },
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+    },
+    studentName: {
+      type: String,
+    },
+    class: {
+      type: String,
+    },
+    category: {
+      type: String,
+    },
     amount: {
       type: Number,
       required: true
+    },
+    mode: {
+      type: String,
     },
     date: {
       type: Date,

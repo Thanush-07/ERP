@@ -54,6 +54,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: function() { return this.role === "staff"; }
     },
+    // classes assigned to teaching staff (e.g. ["8A","9B"]) 
+    classes: {
+      type: [String],
+      default: []
+    },
     photo: {
       data: Buffer,
       contentType: String
