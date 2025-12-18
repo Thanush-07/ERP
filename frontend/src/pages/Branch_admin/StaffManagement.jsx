@@ -16,6 +16,8 @@ export default function StaffManagement() {
     address: "",
     location: "",
     staffCategory: "teaching",
+    customCategory: "",
+    classes: "",
     photo: null,
   });
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -48,7 +50,15 @@ export default function StaffManagement() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    // if staffCategory changed, clear fields that shouldn't apply for the new category
+    if (name === "staffCategory") {
+      const updates = { [name]: value };
+      if (value !== "other") updates.customCategory = "";
+      if (value !== "teaching") updates.classes = "";
+      setFormData(prev => ({ ...prev, ...updates }));
+      return;
+    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoChange = (e) => {
@@ -70,6 +80,8 @@ export default function StaffManagement() {
       address: "",
       location: "",
       staffCategory: "teaching",
+      customCategory: "",
+      classes: "",
       photo: null,
     });
     setPhotoPreview(null);
@@ -80,10 +92,51 @@ export default function StaffManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // build payload and normalize types expected by backend
+    const payload = { ...formData };
+
+    // if user selected 'other' and provided a customCategory, store that value in staffCategory
+    if (payload.staffCategory === "other") {
+      if (payload.customCategory && payload.customCategory.trim() !== "") {
+        payload.staffCategory = payload.customCategory.trim();
+      }
+    }
+
+    // age should be a number
+    if (payload.age) {
+      const n = Number(payload.age);
+      payload.age = Number.isNaN(n) ? payload.age : n;
+    }
+
+    // classes should only be sent for teaching staff; convert to array
+    if (payload.staffCategory === "teaching") {
+      if (payload.classes && typeof payload.classes === "string") {
+        const arr = payload.classes.split(",").map(s => s.trim()).filter(Boolean);
+        payload.classes = arr;
+      }
+    } else {
+      delete payload.classes;
+    }
+
+    // remove temporary customCategory field from payload (its value moved into staffCategory)
+    delete payload.customCategory;
+
+    console.log("Staff payload:", payload);
+
     const data = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (formData[key] !== null && formData[key] !== "") {
-        data.append(key, formData[key]);
+    Object.keys(payload).forEach((key) => {
+      const val = payload[key];
+      if (val === null || val === "") return;
+      // append files directly
+      if (val instanceof File) {
+        data.append(key, val);
+        return;
+      }
+      // for arrays/objects send JSON string so backend can parse
+      if (typeof val === "object") {
+        data.append(key, JSON.stringify(val));
+      } else {
+        data.append(key, String(val));
       }
     });
 
@@ -116,8 +169,8 @@ export default function StaffManagement() {
       resetForm();
       loadStaff();
     } catch (error) {
-      console.error("Error saving staff:", error);
-      alert(error.response?.data?.message || "Failed to save staff member");
+      console.error("Error saving staff:", error, error.response?.data);
+      alert(JSON.stringify(error.response?.data || error.message));
     }
   };
 
@@ -131,6 +184,8 @@ export default function StaffManagement() {
       address: staffMember.address,
       location: staffMember.location,
       staffCategory: staffMember.staffCategory,
+      customCategory: staffMember.staffCategory === "other" ? (staffMember.customCategory || "") : "",
+      classes: staffMember.staffCategory === "teaching" ? (staffMember.classes || "") : "",
       photo: null,
     });
     setPhotoPreview(
@@ -275,6 +330,7 @@ export default function StaffManagement() {
                 >
                   <option value="teaching">Teaching</option>
                   <option value="non-teaching">Non-Teaching</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 
@@ -292,6 +348,36 @@ export default function StaffManagement() {
                 )}
               </div>
             </div>
+
+            {formData.staffCategory === "other" && (
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Specify Category *</label>
+                  <input
+                    type="text"
+                    name="customCategory"
+                    value={formData.customCategory}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.staffCategory === "teaching" && (
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Classes</label>
+                  <input
+                    type="text"
+                    name="classes"
+                    value={formData.classes}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 8A,9B or comma separated"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="form-actions">
               <button type="submit" className="submit-btn">
@@ -341,17 +427,18 @@ export default function StaffManagement() {
                   <p className="staff-age">Age: {member.age}</p>
                   <p className="staff-location">{member.location}</p>
                   <p className="staff-address">{member.address}</p>
-                  <span
-                    className={`staff-category ${
-                      member.staffCategory === "teaching"
-                        ? "teaching"
-                        : "non-teaching"
-                    }`}
-                  >
-                    {member.staffCategory === "teaching"
-                      ? "Teaching Staff"
-                      : "Non-Teaching Staff"}
-                  </span>
+                  {(() => {
+                    const categoryClass = member.staffCategory === "teaching" ? "teaching" : member.staffCategory === "non-teaching" ? "non-teaching" : "other";
+                    const categoryLabel = member.staffCategory === "teaching" ? "Teaching Staff" : member.staffCategory === "non-teaching" ? "Non-Teaching Staff" : (member.customCategory || "Other");
+                    return (
+                      <>
+                        <span className={`staff-category ${categoryClass}`}>
+                          {categoryLabel}
+                        </span>
+                        {member.classes && <p className="staff-classes">Classes: {member.classes}</p>}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className="staff-actions">

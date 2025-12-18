@@ -1,0 +1,30 @@
+.panel-card {
+  padding: 16px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+}
+
+.create-structure {
+  margin-bottom: 8px;
+}
+
+.student-details {
+  margin-top: 16px;
+}
+
+.fee-structure-item {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

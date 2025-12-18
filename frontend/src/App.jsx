@@ -26,7 +26,7 @@ import BranchInventory from "./pages/Branch_admin/Inventory";
 import BranchExpenses from "./pages/Branch_admin/Expenses";
 import BranchBuses from "./pages/Branch_admin/Buses";
 import BranchReports from "./pages/Branch_admin/Reports";
-import BranchChangePassword from "./pages/Branch_admin/ChangePassword";
+import BranchChangePassword from "./pages/Branch_admin/ChangePasswordNew";
 import BranchStaffManagement from "./pages/Branch_admin/StaffManagement";
 // Other roles
 import StaffDashboard from "./pages/Staff/Dashboard";

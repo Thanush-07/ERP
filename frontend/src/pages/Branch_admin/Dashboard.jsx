@@ -173,16 +173,38 @@ export default function BranchDashboard() {
             )}
 
             <ul className="dash-activity">
-              {recent.map((item) => (
-                <li key={item.id}>
-                  <div className="dash-activity-title">
-                    {item.description}
-                  </div>
-                  <div className="dash-activity-meta">
-                    {item.when} • {item.by}
-                  </div>
-                </li>
-              ))}
+              {recent.map((item) => {
+                // sanitize description and when/by metadata to avoid showing 'undefined'
+                const rawDesc = item.description || "";
+                let desc = String(rawDesc).replace(/\bundefined\b/gi, "").trim();
+                // remove empty parentheses left behind e.g. 'Name ()' or '(undefined)'
+                desc = desc.replace(/\(\s*\)$/, "").replace(/\(undefined\)/gi, "").trim();
+
+                const rawWhen = item.when;
+                let whenStr = "";
+                if (rawWhen) {
+                  const m = String(rawWhen).match(/>([^<]+)</);
+                  const candidate = m ? m[1] : String(rawWhen);
+                  const dt = new Date(candidate);
+                  whenStr = isNaN(dt) ? candidate : dt.toLocaleString();
+                }
+                const who = (item.by || "").replace(/\bundefined\b/gi, "").trim();
+
+                const parts = [];
+                if (whenStr) parts.push(whenStr);
+                if (who) parts.push(who);
+
+                return (
+                  <li key={item.id}>
+                    {desc && (
+                      <div className="dash-activity-title">{desc}</div>
+                    )}
+                    {parts.length > 0 && (
+                      <div className="dash-activity-meta">{parts.join(" • ")}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </section>

@@ -21,12 +21,18 @@ export default function Students() {
     class: "",
     section: "",
     rollNo: "",
-    parentName: "",
+    motherName: "",
+    fatherName: "",
     phoneNo: "",
     address: "",
     admissionNumber: "",
     academicYear: "",
-    status: "active"
+    status: "active",
+    fees: "",
+    residency: "hosteller", // 'hosteller' or 'day-scholar'
+    busFees: "",
+    hostelFees: "",
+    emisNo: ""
   });
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -130,12 +136,18 @@ export default function Students() {
       class: "",
       section: "",
       rollNo: "",
-      parentName: "",
+      motherName: "",
+      fatherName: "",
       phoneNo: "",
       address: "",
       admissionNumber: "",
       academicYear: "",
-      status: "active"
+      status: "active",
+      fees: "",
+      residency: "hosteller",
+      busFees: "",
+      hostelFees: "",
+      emisNo: ""
     });
     setEditingStudent(null);
     setShowForm(false);
@@ -145,10 +157,39 @@ export default function Students() {
     e.preventDefault();
 
     try {
+      // prepare payload; normalize numbers
+      const payload = { ...formData };
+      if (payload.fees !== undefined && payload.fees !== "") payload.fees = Number(payload.fees);
+      if (payload.busFees !== undefined && payload.busFees !== "") payload.busFees = Number(payload.busFees);
+      if (payload.hostelFees !== undefined && payload.hostelFees !== "") payload.hostelFees = Number(payload.hostelFees);
+
+      // compute parentName for backend compatibility (combine mother + father if both present)
+      const mother = payload.motherName?.trim();
+      const father = payload.fatherName?.trim();
+      if (mother && father) payload.parentName = `${mother} / ${father}`;
+      else if (mother) payload.parentName = mother;
+      else if (father) payload.parentName = father;
+
+      // include only the relevant fee field based on residency
+      if (payload.residency === "day-scholar") {
+        delete payload.hostelFees;
+      } else if (payload.residency === "hosteller") {
+        delete payload.busFees;
+      } else {
+        delete payload.busFees;
+        delete payload.hostelFees;
+      }
+
+      // remove local-only fields we don't want to send if backend expects parentName
+      delete payload.motherName;
+      delete payload.fatherName;
+
+      console.log("Student payload:", payload);
+
       if (editingStudent) {
         await axios.put(
           `http://localhost:5000/api/branch/${branchId}/students/${editingStudent._id}`,
-          formData,
+          payload,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -159,7 +200,7 @@ export default function Students() {
       } else {
         await axios.post(
           `http://localhost:5000/api/branch/${branchId}/students`,
-          formData,
+          payload,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -172,8 +213,8 @@ export default function Students() {
       loadStudents();
       loadStats();
     } catch (error) {
-      console.error("Error saving student:", error);
-      alert(error.response?.data?.message || "Failed to save student");
+      console.error("Error saving student:", error, error.response?.data);
+      alert(JSON.stringify(error.response?.data || error.message));
     }
   };
 
@@ -184,12 +225,18 @@ export default function Students() {
       class: student.class,
       section: student.section,
       rollNo: student.rollNo,
-      parentName: student.parentName,
+      motherName: student.motherName || student.parentName || "",
+      fatherName: student.fatherName || "",
       phoneNo: student.phoneNo,
       address: student.address,
       admissionNumber: student.admissionNumber,
       academicYear: student.academicYear,
-      status: student.status
+      status: student.status,
+      fees: student.fees || "",
+      residency: student.residency || "hosteller",
+      busFees: student.busFees || "",
+      hostelFees: student.hostelFees || "",
+      emisNo: student.emisNo || ""
     });
     setShowForm(true);
   };
@@ -295,11 +342,22 @@ export default function Students() {
               </div>
 
               <div className="form-group">
-                <label>Parent Name *</label>
+                <label>Mother Name *</label>
                 <input
                   type="text"
-                  name="parentName"
-                  value={formData.parentName}
+                  name="motherName"
+                  value={formData.motherName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Father Name *</label>
+                <input
+                  type="text"
+                  name="fatherName"
+                  value={formData.fatherName}
                   onChange={handleInputChange}
                   required
                 />
@@ -399,16 +457,70 @@ export default function Students() {
                     required
                     disabled={editingStudent}
                   />
-                  {!editingStudent && (
-                    <button
-                      type="button"
-                      className="generate-btn"
-                      onClick={generateAdmissionNumber}
-                    >
-                      Generate
-                    </button>
-                  )}
                 </div>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Fees *</label>
+                <input
+                  type="number"
+                  name="fees"
+                  value={formData.fees}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Residency *</label>
+                <select name="residency" value={formData.residency} onChange={handleInputChange} required>
+                  <option value="hosteller">Hosteller</option>
+                  <option value="day-scholar">Day Scholar</option>
+                </select>
+              </div>
+            </div>
+
+            {formData.residency === "day-scholar" && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Bus Fees</label>
+                  <input
+                    type="number"
+                    name="busFees"
+                    value={formData.busFees}
+                    onChange={handleInputChange}
+                    placeholder="Enter bus fee if day scholar"
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.residency === "hosteller" && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Hostel Fees</label>
+                  <input
+                    type="number"
+                    name="hostelFees"
+                    value={formData.hostelFees}
+                    onChange={handleInputChange}
+                    placeholder="Enter hostel fee if hosteller"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>EMIS No (optional)</label>
+                <input
+                  type="text"
+                  name="emisNo"
+                  value={formData.emisNo}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
 
@@ -513,7 +625,7 @@ export default function Students() {
                     <td>{student.class}</td>
                     <td>{student.section}</td>
                     <td>{student.rollNo}</td>
-                    <td>{student.parentName}</td>
+                    <td>{student.motherName || student.parentName || ""}{student.fatherName ? (" / " + student.fatherName) : ""}</td>
                     <td>{student.phoneNo}</td>
                     <td>
                       <span

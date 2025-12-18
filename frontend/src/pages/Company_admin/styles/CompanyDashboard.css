@@ -199,3 +199,54 @@
     align-items: flex-start;
   }
 }
+
+/* Report types / buttons enhancements */
+.report-types {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  text-align: left;
+}
+
+.report-type-btn .report-icon {
+  font-size: 18px;
+  width: 30px;
+  text-align: center;
+}
+
+.report-type-btn .report-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.report-type-btn:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.report-type-btn.active {
+  background: linear-gradient(90deg, #2563eb, #4f46e5);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+}
+
+.change-pass-form input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  margin-top: 6px;
+}
