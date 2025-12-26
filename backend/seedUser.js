@@ -11,15 +11,18 @@ import { InventoryItem, PurchaseEntry } from "./models/inventory.js";
 
 dotenv.config();
 
-const MONGO_URL =
-  process.env.MONGO_URL ||
-  process.env.MONGODB_URI ||
-  "mongodb://127.0.0.1:27017/first-crop_db";
+  const MONGO_URL =
+  process.env.MONGO_ATLAS || "mongodb://127.0.0.1:27017/first-crop_db";
 
 async function run() {
   try {
     await mongoose.connect(MONGO_URL);
-    console.log("Mongo connected for seeding");
+console.log("Mongo connected for seeding");
+console.log(
+  "Using DB:",
+  MONGO_URL.includes("mongodb+srv") ? "ATLAS ☁️" : "LOCAL (Compass) 💻"
+);
+
 
     await Promise.all([
       User.deleteMany({}),

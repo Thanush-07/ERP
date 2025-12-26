@@ -13,13 +13,26 @@ import { FeePayment } from './models/FeePayment.js';
 import { Branch } from './models/Branch.js';
 import { Institution } from './models/Institution.js';
 
-const MONGO_URL = process.env.MONGO_URL || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/first-crop_db';
+// =======  MongoDB Atlas (preferred) =======
+const MONGO_URL_ATLAS = process.env.MONGO_ATLAS;
+
+// =======  Local MongoDB (Compass) =======
+// Keep this for local usage; do not delete per request
+const MONGO_URL_LOCAL = 'mongodb://127.0.0.1:27017/first-crop_db';
+
+// ======= SWITCH HERE =======
+// Prefer Atlas if provided, else fallback to local Compass
+const MONGO_URL = MONGO_URL_ATLAS || MONGO_URL_LOCAL;
 
 const seedDatabase = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(MONGO_URL);
     console.log('✓ Connected to MongoDB');
+    console.log(
+      'Using DB:',
+      MONGO_URL.includes('mongodb+srv') ? 'ATLAS ☁️' : 'LOCAL (Compass) 💻'
+    );
 
     // Ensure institution exists first (required by Branch schema)
     let institution = await Institution.findOne();
