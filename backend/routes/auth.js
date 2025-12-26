@@ -16,7 +16,10 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log("LOGIN ATTEMPT:", { email, password: password ? "***" : "missing" });
+
     if (!email || !password) {
+      console.log("VALIDATION FAILED: Missing email or password");
       return res
         .status(400)
         .json({ message: "Email and password are required" });
@@ -26,11 +29,15 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ email, status: "active" });
 
     if (!user) {
+      console.log("USER NOT FOUND or INACTIVE:", email);
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
+    console.log("USER FOUND:", { id: user._id, email: user.email, hasHash: !!user.password_hash });
+
     const ok = await user.comparePassword(password);
     if (!ok) {
+      console.log("PASSWORD MISMATCH for:", email);
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
