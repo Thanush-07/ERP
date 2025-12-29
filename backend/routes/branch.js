@@ -9,8 +9,27 @@ import { FeePayment } from "../models/FeePayment.js";
 import { User } from "../models/User.js";
 import { FeeStructure } from "../models/FeeStructure.js";
 import { Expense } from "../models/Expense.js";
+import { ActivityLog } from "../models/Institution.js";
 
 const router = express.Router();
+
+// Helper function to log activity
+const logActivity = async (type, description, entity, entityId, entityName, institutionId = null, branchId = null) => {
+  try {
+    const activity = new ActivityLog({
+      type,
+      description,
+      entity,
+      entityId,
+      entityName,
+      institutionId,
+      branchId
+    });
+    await activity.save();
+  } catch (err) {
+    console.error("Activity log error:", err);
+  }
+};
 
 /* ================= BRANCH DASHBOARD ================= */
 
@@ -789,6 +808,18 @@ router.post("/:branchId/students", async (req, res) => {
     const student = new Student(studentData);
 
     await student.save();
+
+    // Log activity
+    await logActivity(
+      "student_created",
+      `Student "${name}" (${studentClass}-${section}) created`,
+      "student",
+      student._id,
+      name,
+      branch.institution_id,
+      branchId
+    );
+
     res.status(201).json(student);
   } catch (err) {
     console.error("CREATE STUDENT ERROR:", err);
@@ -854,7 +885,7 @@ router.delete("/:branchId/students/:studentId", async (req, res) => {
   try {
     const { branchId, studentId } = req.params;
 
-    const student = await Student.findOneAndDelete({
+    const student = await Student.findOne({
       _id: studentId,
       branch_id: branchId
     });
@@ -862,6 +893,24 @@ router.delete("/:branchId/students/:studentId", async (req, res) => {
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
+
+    const branch = await Branch.findById(branchId);
+    const studentName = student.name;
+    const studentClass = student.class;
+    const studentSection = student.section;
+
+    await Student.findByIdAndDelete(studentId);
+
+    // Log activity
+    await logActivity(
+      "student_deleted",
+      `Student "${studentName}" (${studentClass}-${studentSection}) deleted`,
+      "student",
+      studentId,
+      studentName,
+      branch.institution_id,
+      branchId
+    );
 
     res.json({ message: "Student deleted successfully" });
   } catch (err) {
