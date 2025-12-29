@@ -20,7 +20,8 @@ export default function Dashboard() {
     class: "",
     section: "",
     rollNo: "",
-    parentName: "",
+    motherName: "",
+    fatherName: "",
     phoneNo: "",
     address: "",
     status: "active",
@@ -81,7 +82,8 @@ export default function Dashboard() {
       class: student.class || "",
       section: student.section || "",
       rollNo: student.rollNo || "",
-      parentName: student.parentName || "",
+      motherName: student.motherName || "",
+      fatherName: student.fatherName || "",
       phoneNo: student.phoneNo || "",
       address: student.address || "",
       status: student.status || "active",
@@ -101,7 +103,8 @@ export default function Dashboard() {
       name: "",
       class: "",
       section: "",
-      rollNo: "",
+      motherName: "",
+      father: "",
       parentName: "",
       phoneNo: "",
       address: "",
@@ -155,8 +158,8 @@ export default function Dashboard() {
         name: formData.name,
         class: formData.class,
         section: formData.section,
-        rollNo: formData.rollNo,
-        parentName: formData.parentName,
+        motherName: formData.motherName,
+        fatherName: formData.fatherName,
         phoneNo: formData.phoneNo,
         address: formData.address,
         status: formData.status,
@@ -284,7 +287,7 @@ export default function Dashboard() {
                 <th>Class</th>
                 <th>Section</th>
                 <th>Roll</th>
-                <th>Parent</th>
+                <th>Mother Name</th>
                 <th>Phone</th>
                 <th>Status</th>
                 <th></th>
@@ -297,7 +300,7 @@ export default function Dashboard() {
                   <td>{st.class}</td>
                   <td>{st.section}</td>
                   <td>{st.rollNo}</td>
-                  <td>{st.parentName}</td>
+                  <td>{st.motherName}</td>
                   <td>{st.phoneNo}</td>
                   <td><span className={`badge ${st.status === "active" ? "success" : "muted"}`}>{st.status}</span></td>
                   <td>
@@ -348,8 +351,12 @@ export default function Dashboard() {
                 <input name="rollNo" value={formData.rollNo} onChange={handleFieldChange} required />
               </label>
               <label>
-                Parent name
-                <input name="parentName" value={formData.parentName} onChange={handleFieldChange} required />
+                Mother Name
+                <input name="motherName" value={formData.motherName} onChange={handleFieldChange} />
+              </label>
+              <label>
+                Father Name
+                <input name="fatherName" value={formData.fatherName} onChange={handleFieldChange} />
               </label>
               <label>
                 Phone
@@ -421,75 +428,100 @@ export default function Dashboard() {
       {/* Student Detail Modal */}
       {editingStudent && !formData.name && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content student-details-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Student Details</h2>
+              <div>
+                <h2>Student Details</h2>
+                <p className="modal-subtitle">Complete information</p>
+              </div>
               <button className="modal-close" onClick={closeModal}>&times;</button>
             </div>
             <div className="modal-body">
-              {editingStudent?.image && (
-                <div className="modal-image">
-                  <img src={editingStudent.image} alt={editingStudent.name} />
-                </div>
-              )}
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <label>Name</label>
-                  <p>{editingStudent?.name}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Roll No</label>
-                  <p>{editingStudent?.rollNo}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Class</label>
-                  <p>{editingStudent?.class}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Section</label>
-                  <p>{editingStudent?.section}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Parent Name</label>
-                  <p>{editingStudent?.parentName}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Phone No</label>
-                  <p>{editingStudent?.phoneNo}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Aadhar Card Number</label>
-                  <p>{editingStudent?.aadharCardNumber || "N/A"}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Ration Card Number</label>
-                  <p>{editingStudent?.rationCardNumber || "N/A"}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Address</label>
-                  <p>{editingStudent?.address || "N/A"}</p>
-                </div>
-                <div className="detail-item">
-                  <label>Status</label>
-                  <p><span className={`badge ${editingStudent?.status === "active" ? "success" : "muted"}`}>{editingStudent?.status}</span></p>
-                </div>
-              </div>
-              {editingStudent?.customFields && editingStudent.customFields.length > 0 && (
-                <div className="custom-fields-display">
-                  <h4>Custom Fields</h4>
-                  <div className="custom-fields-grid">
-                    {editingStudent.customFields.map((field, idx) => (
-                      <div key={idx} className="detail-item">
-                        <label>{field.key}</label>
-                        <p>{field.value}</p>
-                      </div>
-                    ))}
+              <div className="student-details-top">
+                {editingStudent?.image && (
+                  <div className="modal-image-large">
+                    <img src={editingStudent.image} alt={editingStudent.name} />
+                  </div>
+                )}
+                <div className="student-basic-info">
+                  <h3>{editingStudent?.name}</h3>
+                  <div className="basic-details">
+                    <div className="basic-item">
+                      <span className="label">Roll No:</span>
+                      <span className="value">{editingStudent?.rollNo}</span>
+                    </div>
+                    <div className="basic-item">
+                      <span className="label">Class:</span>
+                      <span className="value">{editingStudent?.class} - {editingStudent?.section}</span>
+                    </div>
+                    <div className="basic-item">
+                      <span className="label">Status:</span>
+                      <span className="value"><span className={`badge ${editingStudent?.status === "active" ? "success" : "muted"}`}>{editingStudent?.status}</span></span>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              <div className="details-sections">
+                <div className="detail-section">
+                  <h4 className="section-title">👨‍👩‍👧 Family Information</h4>
+                  <div className="section-grid">
+                    <div className="detail-item">
+                      <label>Mother Name</label>
+                      <p>{editingStudent?.motherName || "N/A"}</p>
+                    </div>
+                    <div className="detail-item">
+                      <label>Father Name</label>
+                      <p>{editingStudent?.fatherName || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4 className="section-title">📞 Contact Information</h4>
+                  <div className="section-grid">
+                    <div className="detail-item">
+                      <label>Phone No</label>
+                      <p>{editingStudent?.phoneNo}</p>
+                    </div>
+                    <div className="detail-item">
+                      <label>Address</label>
+                      <p>{editingStudent?.address || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4 className="section-title">📋 Identity Information</h4>
+                  <div className="section-grid">
+                    <div className="detail-item">
+                      <label>Aadhar Card Number</label>
+                      <p>{editingStudent?.aadharCardNumber || "N/A"}</p>
+                    </div>
+                    <div className="detail-item">
+                      <label>Ration Card Number</label>
+                      <p>{editingStudent?.rationCardNumber || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {editingStudent?.customFields && editingStudent.customFields.length > 0 && (
+                  <div className="detail-section">
+                    <h4 className="section-title">📌 Additional Details</h4>
+                    <div className="section-grid">
+                      {editingStudent.customFields.map((field, idx) => (
+                        <div key={idx} className="detail-item">
+                          <label>{field.key}</label>
+                          <p>{field.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="modal-footer">
-              <button className="btn-primary" onClick={() => startEdit(editingStudent)}>Edit Student</button>
+              <button className="btn-primary" onClick={() => startEdit(editingStudent)}>✏️ Edit Student</button>
               <button className="btn-ghost" onClick={closeModal}>Close</button>
             </div>
           </div>
