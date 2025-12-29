@@ -21,3 +21,39 @@ const institutionSchema = new mongoose.Schema(
 );
 
 export const Institution = mongoose.model("Institution", institutionSchema);
+
+// Activity Log Schema - stored at company level
+const activityLogSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: [
+        "institution_created",
+        "institution_updated",
+        "institution_deleted",
+        "admin_created",
+        "admin_updated",
+        "admin_deleted",
+        "branch_created",
+        "branch_updated",
+        "branch_deleted"
+      ],
+      required: true
+    },
+    description: { type: String, required: true },
+    entity: {
+      type: String,
+      enum: ["institution", "admin", "branch"],
+      required: true
+    },
+    entityId: mongoose.Schema.Types.ObjectId,
+    entityName: String,
+    institutionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institution"
+    }
+  },
+  { timestamps: true }
+);
+
+export const ActivityLog = mongoose.model("ActivityLog", activityLogSchema);
