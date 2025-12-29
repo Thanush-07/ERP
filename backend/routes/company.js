@@ -3,13 +3,30 @@ import express from "express";
 import mongoose from "mongoose";
 import multer from "multer";
 
-import { Institution } from "../models/Institution.js";
+import { Institution, ActivityLog } from "../models/Institution.js";
 import { User } from "../models/User.js";
 import { Branch } from "../models/Branch.js";
 import { Student } from "../models/Student.js";
 import { FeePayment } from "../models/FeePayment.js";
 
 const router = express.Router();
+
+// Helper function to log activity
+const logActivity = async (type, description, entity, entityId, entityName, institutionId = null) => {
+  try {
+    const activity = new ActivityLog({
+      type,
+      description,
+      entity,
+      entityId,
+      entityName,
+      institutionId
+    });
+    await activity.save();
+  } catch (err) {
+    console.error("Activity log error:", err);
+  }
+};
 
 // Multer memory storage (keep file in memory, we put it into Mongo)
 const storage = multer.memoryStorage();
@@ -24,7 +41,7 @@ router.get("/dashboard", async (req, res) => {
     if (institutionId) branchFilter.institution_id = institutionId;
     if (branchId) branchFilter._id = branchId;
 
-    const [totalInstitutions, totalBranches, branchList, instList] =
+    const [totalInstitutions, totalBranches, branchList, instList, activities] =
       await Promise.all([
         Institution.countDocuments({}),
         Branch.countDocuments(branchFilter),
@@ -32,7 +49,10 @@ router.get("/dashboard", async (req, res) => {
           .populate("institution_id", "name")
           .sort({ createdAt: -1 })
           .limit(50),
-        Institution.find({}).select("name")
+        Institution.find({}).select("name"),
+        ActivityLog.find({})
+          .sort({ createdAt: -1 })
+          .limit(10)
       ]);
 
     const branches = (branchList || []).map((b) => ({
@@ -40,6 +60,14 @@ router.get("/dashboard", async (req, res) => {
       name: b.branch_name,
       institutionName: b.institution_id?.name || "",
       institutionId: b.institution_id?._id || null
+    }));
+
+    // Format recent activities for display
+    const recentActivities = activities.map((a) => ({
+      id: a._id,
+      description: a.description,
+      when: new Date(a.createdAt).toLocaleString(),
+      by: a.entity
     }));
 
     const totals = {
@@ -53,7 +81,7 @@ router.get("/dashboard", async (req, res) => {
       totals,
       institutions: instList,
       branches,
-      recentActivities: []
+      recentActivities
     });
   } catch (err) {
     console.error("COMPANY DASHBOARD ERROR:", err);
@@ -86,6 +114,16 @@ router.post("/institutions", async (req, res) => {
           : 7
     });
     await inst.save();
+
+    // Log activity
+    await logActivity(
+      "institution_created",
+      `Institution "${inst.name}" created`,
+      "institution",
+      inst._id,
+      inst.name
+    );
+
     res.status(201).json(inst);
   } catch (err) {
     console.error("CREATE INSTITUTION ERROR:", err);
@@ -108,6 +146,16 @@ router.put("/institutions/:id", async (req, res) => {
       },
       { new: true }
     );
+
+    // Log activity
+    await logActivity(
+      "institution_updated",
+      `Institution "${inst.name}" updated`,
+      "institution",
+      inst._id,
+      inst.name
+    );
+
     res.json(inst);
   } catch (err) {
     console.error("UPDATE INSTITUTION ERROR:", err);
@@ -117,7 +165,20 @@ router.put("/institutions/:id", async (req, res) => {
 
 router.delete("/institutions/:id", async (req, res) => {
   try {
+    const inst = await Institution.findById(req.params.id);
+    const instName = inst?.name || "Unknown";
+
     await Institution.findByIdAndDelete(req.params.id);
+
+    // Log activity
+    await logActivity(
+      "institution_deleted",
+      `Institution "${instName}" deleted`,
+      "institution",
+      req.params.id,
+      instName
+    );
+
     res.json({ message: "Institution deleted" });
   } catch (err) {
     console.error("DELETE INSTITUTION ERROR:", err);
@@ -138,7 +199,7 @@ router.post("/branches", async (req, res) => {
     }
 
     const inst = await Institution.findById(institution_id).select(
-      "maxBranches"
+      "maxBranches name"
     );
     if (!inst) {
       return res.status(404).json({ message: "Institution not found" });
@@ -159,6 +220,16 @@ router.post("/branches", async (req, res) => {
       location
     });
     await branch.save();
+
+    // Log activity
+    await logActivity(
+      "branch_created",
+      `Branch "${branch_name}" created under "${inst.name}"`,
+      "branch",
+      branch._id,
+      branch_name,
+      institution_id
+    );
 
     res.status(201).json(branch);
   } catch (err) {
@@ -242,6 +313,8 @@ router.post("/admins", async (req, res) => {
       return res.status(400).json({ message: "Email already in use" });
     }
 
+    const inst = await Institution.findById(institution_id).select("name");
+
     const user = new User({
       name,
       email,
@@ -254,6 +327,16 @@ router.post("/admins", async (req, res) => {
 
     await user.setPassword("Admin@123");
     await user.save();
+
+    // Log activity
+    await logActivity(
+      "admin_created",
+      `Admin "${name}" created for "${inst?.name || 'Institution'}"`,
+      "admin",
+      user._id,
+      name,
+      institution_id
+    );
 
     const populated = await user.populate("institution_id", "name");
     res.status(201).json(populated);
@@ -271,6 +354,17 @@ router.put("/admins/:id", async (req, res) => {
       { name, email, phone, institution_id, status },
       { new: true }
     ).populate("institution_id", "name");
+
+    // Log activity
+    await logActivity(
+      "admin_updated",
+      `Admin "${name}" updated`,
+      "admin",
+      req.params.id,
+      name,
+      institution_id
+    );
+
     res.json(user);
   } catch (err) {
     console.error("UPDATE ADMIN ERROR:", err);
@@ -280,7 +374,22 @@ router.put("/admins/:id", async (req, res) => {
 
 router.delete("/admins/:id", async (req, res) => {
   try {
+    const user = await User.findById(req.params.id).select("name institution_id");
+    const userName = user?.name || "Unknown";
+    const instId = user?.institution_id;
+
     await User.findByIdAndDelete(req.params.id);
+
+    // Log activity
+    await logActivity(
+      "admin_deleted",
+      `Admin "${userName}" deleted`,
+      "admin",
+      req.params.id,
+      userName,
+      instId
+    );
+
     res.json({ message: "Admin deleted" });
   } catch (err) {
     console.error("DELETE ADMIN ERROR:", err);

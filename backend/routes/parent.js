@@ -44,9 +44,13 @@ router.get("/:parentId/fees", async (req, res) => {
       class: String(student.class),
     });
 
-    // Get payment history
+    // Get payment history (approved only)
     const payments = await FeePayment.find({
       studentId: student._id,
+      $or: [
+        { status: "approved" },
+        { status: { $exists: false } }
+      ]
     }).sort({ date: -1 });
 
     // Calculate totals
@@ -142,47 +146,93 @@ router.get("/:parentId/marks", async (req, res) => {
 // Verify parent login by student name and phone (parent login)
 router.get("/verify", async (req, res) => {
   try {
-    const { studentName, phone } = req.query;
+    const { studentName, phone, admissionNumber } = req.query;
 
-    if (!studentName || !phone) {
+    if (!studentName && !admissionNumber) {
       return res
         .status(400)
-        .json({ message: "Student name and phone are required" });
+        .json({ message: "Student name or admission number is required" });
+    }
+    if (!phone) {
+      return res
+        .status(400)
+        .json({ message: "Phone is required" });
     }
 
-    // Find student
-    const student = await Student.findOne({
-      name: { $regex: studentName, $options: "i" },
-      phoneNo: phone,
+    const normalizePhone = (p) => (p || "").replace(/\D/g, "");
+    const requestedPhone = normalizePhone(phone);
+
+    const nameFilter = studentName
+      ? { name: { $regex: studentName, $options: "i" } }
+      : {};
+
+    const admissionFilter = admissionNumber
+      ? { admissionNumber: admissionNumber }
+      : {};
+
+    // Find student by name/admission and relaxed phone match (last 10 digits)
+    const candidates = await Student.find({
+      ...nameFilter,
+      ...admissionFilter,
+    }).limit(5);
+
+    const student = candidates.find((s) => {
+      const stuPhone = normalizePhone(s.phoneNo);
+      // match exact or last 10 digits
+      return (
+        stuPhone === requestedPhone ||
+        (stuPhone.length >= 10 && requestedPhone.length >= 10 &&
+          stuPhone.slice(-10) === requestedPhone.slice(-10))
+      );
     });
 
     if (!student) {
       return res
-        .status(400)
+        .status(404)
         .json({ message: "Student not found with provided credentials" });
     }
 
-    // Find or create parent user
-    let parent = await User.findOne({
-      name: student.parentName,
-      role: "parent",
-    });
+    // Find or create parent user (prefer stable email key per student)
+    const parentEmail = `parent_${student._id}@localhost`;
+    let parent = await User.findOne({ email: parentEmail, role: "parent" });
 
     if (!parent) {
-      // Create parent user if doesn't exist
+      // Try fallback by name (legacy)
+      parent = await User.findOne({ name: student.parentName, role: "parent" });
+    }
+
+    if (!parent) {
+      // Create fresh parent for this student
       parent = new User({
         name: student.parentName,
-        email: `parent_${student._id}@localhost`,
+        email: parentEmail,
         phone: student.phoneNo,
         role: "parent",
         institution_id: student.institution_id,
         branch_id: student.branch_id,
         status: "active",
       });
-
-      // Set password as phone number
       await parent.setPassword(phone);
-      await parent.save();
+      try {
+        await parent.save();
+      } catch (e) {
+        // Handle possible duplicate email race; fetch existing
+        if (e && e.code === 11000) {
+          parent = await User.findOne({ email: parentEmail, role: "parent" });
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      // Keep parent record in sync (non-destructive)
+      const updates = {};
+      if (parent.name !== student.parentName) updates.name = student.parentName;
+      if (parent.phone !== student.phoneNo) updates.phone = student.phoneNo;
+      if (String(parent.institution_id || "") !== String(student.institution_id || "")) updates.institution_id = student.institution_id;
+      if (String(parent.branch_id || "") !== String(student.branch_id || "")) updates.branch_id = student.branch_id;
+      if (Object.keys(updates).length) {
+        await User.updateOne({ _id: parent._id }, { $set: updates });
+      }
     }
 
     res.json({

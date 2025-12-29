@@ -186,14 +186,36 @@ router.post('/:staffId/fees', async (req, res) => {
       category: category || 'staff-collection',
       amount: Number(amount),
       mode: mode || 'cash',
-      note: note || ''
+      note: note || '',
+      status: 'pending'
     });
 
     await payment.save();
-    res.status(201).json({ message: 'Fee recorded', payment });
+    res.status(201).json({ message: 'Fee submitted to branch admin', payment });
   } catch (err) {
     console.error('STAFF FEE ERROR', err);
     res.status(500).json({ message: 'Failed to record fee' });
+  }
+});
+
+// GET /api/staff/:staffId/fee-categories?class=
+router.get('/:staffId/fee-categories', async (req, res) => {
+  try {
+    const { staffId } = req.params;
+    const { class: cls } = req.query;
+    if (!cls) return res.status(400).json({ message: 'Class is required' });
+
+    const staff = await User.findById(staffId);
+    if (!staff) return res.status(404).json({ message: 'Staff not found' });
+
+    const feeStruct = await FeeStructure.findOne({ branch_id: staff.branch_id, class: String(cls).trim() });
+    if (!feeStruct) return res.json({ categories: [], amounts: {} });
+
+    const categories = feeStruct.categories ? Object.keys(feeStruct.categories) : [];
+    res.json({ categories, amounts: feeStruct.categories || {} });
+  } catch (err) {
+    console.error('STAFF FEE CATEGORIES ERROR', err);
+    res.status(500).json({ message: 'Failed to load fee categories' });
   }
 });
 

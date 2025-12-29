@@ -45,6 +45,10 @@ router.get("/:branchId/dashboard", async (req, res) => {
         {
           $match: {
             branch_id: new mongoose.Types.ObjectId(branchId),
+            $or: [
+              { status: "approved" },
+              { status: { $exists: false } }
+            ]
           },
         },
         {
@@ -83,7 +87,7 @@ router.get("/:branchId/dashboard", async (req, res) => {
       .limit(5);
 
     const recentFees = await FeePayment.find({ branch_id: branchId })
-      .select("studentName amount createdAt")
+      .select("studentName amount createdAt status")
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -96,7 +100,7 @@ router.get("/:branchId/dashboard", async (req, res) => {
       })),
       ...recentFees.map(f => ({
         id: f._id,
-        description: `Fee payment: ₹${f.amount} for ${f.studentName}`,
+        description: `Fee payment${f.status === 'pending' ? ' (pending)' : ''}: ₹${f.amount} for ${f.studentName}`,
         when: new Date(f.createdAt).toLocaleDateString(),
         by: "System",
       })),
@@ -992,7 +996,10 @@ router.post("/:branchId/fee-structures", async (req, res) => {
 router.get("/:branchId/fees", async (req, res) => {
   try {
     const { branchId } = req.params;
-    const fees = await FeePayment.find({ branch_id: branchId }).sort({ createdAt: -1 });
+    const { status } = req.query;
+    const filter = { branch_id: branchId };
+    if (status) filter.status = status;
+    const fees = await FeePayment.find(filter).sort({ createdAt: -1 });
     res.json(fees);
   } catch (err) {
     console.error("GET FEES ERROR:", err);
@@ -1017,13 +1024,38 @@ router.post("/:branchId/fees", async (req, res) => {
       category,
       date: date ? new Date(date) : new Date(),
       mode,
-      class: cls
+      class: cls,
+      status: 'approved'
     });
     await payment.save();
     res.status(201).json(payment);
   } catch (err) {
     console.error("CREATE FEE PAYMENT ERROR:", err);
     res.status(500).json({ message: "Failed to create fee payment" });
+  }
+});
+
+// PATCH /api/branch/:branchId/fees/:paymentId/status
+router.patch('/:branchId/fees/:paymentId/status', async (req, res) => {
+  try {
+    const { branchId, paymentId } = req.params;
+    const { status } = req.body;
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const payment = await FeePayment.findOneAndUpdate(
+      { _id: paymentId, branch_id: branchId },
+      { status },
+      { new: true }
+    );
+
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+    res.json({ message: 'Status updated', payment });
+  } catch (err) {
+    console.error('UPDATE FEE STATUS ERROR', err);
+    res.status(500).json({ message: 'Failed to update fee status' });
   }
 });
 

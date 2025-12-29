@@ -4,7 +4,7 @@ import multer from "multer";
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { Branch } from "../models/Branch.js";
-import { Institution } from "../models/Institution.js";
+import { Institution, ActivityLog } from "../models/Institution.js";
 import { Student } from "../models/Student.js";
 import { FeePayment } from "../models/FeePayment.js";
 
@@ -13,6 +13,23 @@ const router = express.Router();
 
 // Multer memory storage for logos
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Helper function to log activity
+const logActivity = async (type, description, entity, entityId, entityName, institutionId = null) => {
+  try {
+    const activity = new ActivityLog({
+      type,
+      description,
+      entity,
+      entityId,
+      entityName,
+      institutionId
+    });
+    await activity.save();
+  } catch (err) {
+    console.error("Activity log error:", err);
+  }
+};
 
 /* ================= BRANCH ADMINS ================= */
 
@@ -104,6 +121,8 @@ router.post("/:institutionId/branches", async (req, res) => {
       return res.status(400).json({ message: "Branch name is required" });
     }
 
+    const inst = await Institution.findById(institutionId).select("name");
+
     const branch = new Branch({
       institution_id: institutionId,
       branch_name,
@@ -117,6 +136,16 @@ router.post("/:institutionId/branches", async (req, res) => {
     });
 
     await branch.save();
+
+    // Log activity
+    await logActivity(
+      "branch_created",
+      `Branch "${branch_name}" created under "${inst?.name || 'Institution'}"`,
+      "branch",
+      branch._id,
+      branch_name,
+      institutionId
+    );
 
     let branchAdmin = null;
 
@@ -187,6 +216,16 @@ router.put("/:institutionId/branches/:branchId", async (req, res) => {
       return res.status(404).json({ message: "Branch not found" });
     }
 
+    // Log activity
+    await logActivity(
+      "branch_updated",
+      `Branch "${branch.branch_name}" updated`,
+      "branch",
+      branch._id,
+      branch.branch_name,
+      institutionId
+    );
+
     res.json(branch);
   } catch (err) {
     console.error("UPDATE BRANCH ERROR:", err);
@@ -207,6 +246,16 @@ router.delete("/:institutionId/branches/:branchId", async (req, res) => {
     if (!branch) {
       return res.status(404).json({ message: "Branch not found" });
     }
+
+    // Log activity
+    await logActivity(
+      "branch_deleted",
+      `Branch "${branch.branch_name}" deleted`,
+      "branch",
+      branch._id,
+      branch.branch_name,
+      institutionId
+    );
 
     res.json({ message: "Branch deleted" });
   } catch (err) {
