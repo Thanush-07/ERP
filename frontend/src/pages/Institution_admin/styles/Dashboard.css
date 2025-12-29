@@ -56,6 +56,31 @@
   color: #6b7280;
 }
 
+/* Prominent welcome banner */
+.welcome-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 16px;
+  background: linear-gradient(90deg, #eef2ff, #f5f3ff);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow:
+    0 16px 35px rgba(15, 23, 42, 0.06),
+    0 0 0 1px rgba(15, 23, 42, 0.02);
+  color: #111827;
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+
+@media (max-width: 640px) {
+  .welcome-banner {
+    font-size: 1.1rem;
+    padding: 12px 14px;
+  }
+}
+
 /* ===== Stat cards ===== */
 .dash-cards {
   display: grid;

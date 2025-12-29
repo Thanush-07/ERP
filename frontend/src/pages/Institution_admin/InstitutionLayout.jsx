@@ -1,10 +1,16 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
 import "./styles//InstitutionLayout.css";
 
 export default function InstitutionLayout() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    AOS.init({ duration: 600, easing: "ease-out", once: true });
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");

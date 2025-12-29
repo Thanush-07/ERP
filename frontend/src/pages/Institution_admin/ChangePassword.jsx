@@ -53,14 +53,14 @@ export default function ChangePassword() {
 return (
   <div className="dash-wrapper">
     <div className="dash-inner cp-inner">
-      <div className="dash-header cp-header">
+      <div className="dash-header cp-header" data-aos="fade-down">
         <div>
           <h1>Change Password</h1>
           <p>Update your institution admin account password.</p>
         </div>
       </div>
 
-      <div className="cp-card">
+      <div className="cp-card" data-aos="fade-up">
           <form className="inst-form" onSubmit={handleSubmit}>
           <div className="fp-field">
             <label>Current password</label>

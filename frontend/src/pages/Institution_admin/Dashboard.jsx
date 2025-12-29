@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import "../Company_admin/styles/CompanyDashboard.css";
+import "./styles/Dashboard.css";
 
 const API_URL_BASE = "http://localhost:5000/api/institution";
 
@@ -10,17 +10,21 @@ export default function InstitutionDashboard() {
   const [recent, setRecent] = useState([]);
   const [institution, setInstitution] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState("");
 
   const raw = localStorage.getItem("user");
   const user = raw ? JSON.parse(raw) : null;
   const institutionId = user?.institution_id || user?.institutionId || null;
+  const adminName = user?.name || user?.email || "Admin";
 
-  const loadData = async () => {
+  const loadData = async (branchId = "") => {
     if (!institutionId) return;
     setLoading(true);
     try {
+      const params = branchId ? { branchId } : {};
       const res = await axios.get(
-        `${API_URL_BASE}/${institutionId}/dashboard`
+        `${API_URL_BASE}/${institutionId}/dashboard`,
+        { params }
       );
 
       setInstitution(res.data.institution || null);
@@ -29,6 +33,9 @@ export default function InstitutionDashboard() {
           branches: 0,
           students: 0,
           feeCollected: 0,
+          feePending: 0,
+          feeCollectionCount: 0,
+          feePendingCount: 0
         }
       );
       setBranches(res.data.branches || []);
@@ -40,6 +47,9 @@ export default function InstitutionDashboard() {
         branches: 0,
         students: 0,
         feeCollected: 0,
+        feePending: 0,
+        feeCollectionCount: 0,
+        feePendingCount: 0
       });
       setBranches([]);
       setRecent([]);
@@ -52,6 +62,12 @@ export default function InstitutionDashboard() {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [institutionId]);
+
+  const handleBranchFilterChange = (e) => {
+    const branchId = e.target.value;
+    setSelectedBranch(branchId);
+    loadData(branchId);
+  };
 
   if (!institutionId) {
     return (
@@ -73,7 +89,7 @@ export default function InstitutionDashboard() {
 
   return (
     <div className="dash-wrapper">
-      <div className="dash-header inst-header">
+      <div className="dash-header inst-header" data-aos="fade-down">
         <div className="inst-header-main">
           {institution && (
             <img
@@ -88,10 +104,26 @@ export default function InstitutionDashboard() {
           <div>
             <h1>{institution?.name || "Institution Dashboard"}</h1>
             <p>
-              Overview of branches, students and fee collected in this
-              institution.
+              Overview of branches, students and fee collected in this institution.
+              {selectedBranch && (
+                <span style={{ color: "#6b7280", marginLeft: 8 }}>
+                  (Filtered: {branches.find(b => b._id === selectedBranch)?.branch_name || "Selected Branch"})
+                </span>
+              )}
             </p>
           </div>
+        </div>
+
+        <div className="dash-filter" style={{ minWidth: 220 }}>
+          <label>Branch</label>
+          <select value={selectedBranch} onChange={handleBranchFilterChange}>
+            <option value="">All branches</option>
+            {branches.map((b) => (
+              <option key={b._id} value={b._id}>
+                {b.branch_name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {loading && (
@@ -99,30 +131,45 @@ export default function InstitutionDashboard() {
         )}
       </div>
 
-      <div className="dash-cards">
-        <div className="dash-card">
+      {/* Welcome message below header */}
+      <div className="welcome-banner" data-aos="fade-up">
+        Welcome, {adminName}
+      </div>
+
+      <div className="dash-cards" data-aos="fade-up">
+        <div className="dash-card" data-aos="fade-up" data-aos-delay="100">
           <span className="dash-card-label">Branches</span>
           <span className="dash-card-value">{totals.branches}</span>
         </div>
 
-        <div className="dash-card">
+        <div className="dash-card" data-aos="fade-up" data-aos-delay="200">
           <span className="dash-card-label">Students</span>
           <span className="dash-card-value">{totals.students}</span>
         </div>
 
-        <div className="dash-card">
+        <div className="dash-card" data-aos="fade-up" data-aos-delay="300">
           <span className="dash-card-label">Fee Collected</span>
           <span className="dash-card-value">
-            ₹ {totals.feeCollected.toLocaleString()}
+            ₹ {(totals.feeCollected || 0).toLocaleString()}
           </span>
           <span className="dash-card-note">
-            Institution-wide fee collection
+            {totals.feeCollectionCount || 0} payments collected
+          </span>
+        </div>
+
+        <div className="dash-card" data-aos="fade-up" data-aos-delay="400">
+          <span className="dash-card-label">Pending Fees</span>
+          <span className="dash-card-value">
+            ₹ {(totals.feePending || 0).toLocaleString()}
+          </span>
+          <span className="dash-card-note">
+            {totals.feePendingCount || 0} payments pending
           </span>
         </div>
       </div>
 
       <div className="dash-bottom">
-        <section className="dash-panel">
+        <section className="dash-panel" data-aos="fade-up">
           <div className="dash-panel-head">
             <h2>Branches</h2>
             <p>All branches under this institution</p>
@@ -159,13 +206,15 @@ export default function InstitutionDashboard() {
           </div>
         </section>
 
-        <section className="dash-panel">
+        <section className="dash-panel" data-aos="fade-up" data-aos-delay="100">
           <div className="dash-panel-head">
             <h2>Recent Activity</h2>
             <p>Latest changes within this institution</p>
           </div>
 
           <div className="dash-panel-body">
+            {/* Filter moved to header; recent activity respects selectedBranch */}
+
             {recent.length === 0 && (
               <p className="dash-empty">No recent activity</p>
             )}
