@@ -7,6 +7,8 @@ import CreateStructure from "./CreateStructure";
 export default function Fees() {
   const [structures, setStructures] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [pendingPayments, setPendingPayments] = useState([]);
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
@@ -24,7 +26,8 @@ export default function Fees() {
   ]);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const branchId = user.branch_id;
+  const branchId = user?.branch_id || user?.branchId || null;
+  
 
   useEffect(() => { loadAll(); }, []);
 
@@ -49,8 +52,13 @@ export default function Fees() {
         transactionsData = JSON.parse(localStorage.getItem(`fees_local_${branchId}`));
       }
 
+      const approvedTx = (transactionsData || []).filter(t => t.status !== 'pending' && t.status !== 'rejected');
+      const pendingTx = (transactionsData || []).filter(t => t.status === 'pending');
+
       setStructures(structuresData);
-      setTransactions(transactionsData);
+      setTransactions(approvedTx);
+      setPendingPayments(pendingTx);
+      setPendingModalOpen(pendingTx.length > 0);
       setStudents(studentsData);
     } catch (err) {
       console.error("Load fees data", err);
@@ -69,9 +77,29 @@ export default function Fees() {
     return true;
   });
 
-  const paymentsFor = (student) => transactions.filter(t => t.studentId === student._id || t.studentName === student.name);
+  const paymentsFor = (student) => {
+    const sid = String(student?._id || "");
+    const sname = String(student?.name || "").toLowerCase();
+    return transactions.filter(t => {
+      const tid = String(t?.studentId || "");
+      const tname = String(t?.studentName || "").toLowerCase();
+      return (sid && tid && tid === sid) || (sname && tname && tname === sname);
+    });
+  };
 
   const summaryByCategory = (payments) => payments.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + Number(p.amount || 0); return acc; }, {});
+
+  const updatePaymentStatus = async (paymentId, status) => {
+    try {
+      await axios.patch(`http://localhost:5000/api/branch/${branchId}/fees/${paymentId}/status`, { status }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      await loadAll();
+    } catch (err) {
+      console.error('Update payment status failed', err);
+      alert(err.response?.data?.message || 'Failed to update payment status');
+    }
+  };
 
   // handle posting a payment for a student/category
   // helper to POST to API or fallback to localStorage when endpoint not present
@@ -94,19 +122,27 @@ export default function Fees() {
   };
 
   const handlePay = async (student, category, amount) => {
-    if (!amount || Number(amount) <= 0) return alert('Enter a valid amount');
+    const amtNum = Number(amount);
+    if (!amtNum || amtNum <= 0) {
+      alert('Enter a valid amount');
+      return;
+    }
     const payload = {
       studentId: student._id,
       studentName: student.name,
       class: student.class,
       category,
-      amount: Number(amount),
+      amount: amtNum,
       date: new Date().toISOString(),
       mode: 'Cash'
     };
     try {
       const res = await postOrLocal(`http://localhost:5000/api/branch/${branchId}/fees`, payload, 'fees_local');
-      if (res.ok) alert('Payment recorded'); else alert('Payment saved locally (backend missing)');
+      if (res.ok) {
+        alert('Payment recorded');
+      } else {
+        alert('Payment saved locally (backend missing)');
+      }
       await loadAll();
     } catch (err) {
       console.error('Payment failed', err);
@@ -129,7 +165,37 @@ export default function Fees() {
   }
 
   return (
-    
+    <>
+      {pendingModalOpen && pendingPayments.length > 0 && (
+        <div className="pending-modal-backdrop" onClick={() => setPendingModalOpen(false)}>
+          <div className="pending-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="pending-modal-header">
+              <div>
+                <h3>Pending Fee Approvals</h3>
+                <p className="muted">Review and approve collections sent by staff</p>
+              </div>
+              <button className="close-btn" onClick={() => setPendingModalOpen(false)}>Close</button>
+            </div>
+            <div className="pending-list">
+              {pendingPayments.map((p) => (
+                <div key={p._id} className="pending-item">
+                  <div className="pending-item-main">
+                    <div className="pending-title">{p.studentName || 'Unknown student'}</div>
+                    <div className="pending-sub">Class {p.class || '-'} • {p.category || 'Uncategorized'}</div>
+                    <div className="pending-note">{p.note || 'No note provided'}</div>
+                  </div>
+                  <div className="pending-actions">
+                    <div className="pending-amount">₹ {Number(p.amount || 0).toLocaleString()}</div>
+                    <button className="approve-btn" onClick={() => updatePaymentStatus(p._id, 'approved')}>Approve</button>
+                    <button className="reject-btn" onClick={() => updatePaymentStatus(p._id, 'rejected')}>Reject</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="dash-panel">
         <div className="dash-panel-head"><h2>Students & Search</h2><p>Find students and view payments</p></div>
         <div className="dash-panel-body">
@@ -137,6 +203,30 @@ export default function Fees() {
             <div className="panel-card" style={{padding:12}}>
               <CreateStructure branchId={branchId} onSaved={loadAll} />
             </div>
+
+            {pendingPayments.length > 0 && (
+              <div className="panel-card pending-inline">
+                <div>
+                  <div className="pending-inline-title">Pending fee approvals</div>
+                  <div className="pending-inline-sub">You have {pendingPayments.length} request(s) from staff. Click approve to record.</div>
+                </div>
+                <div className="pending-inline-list">
+                  {pendingPayments.slice(0,3).map((p)=> (
+                    <div key={p._id} className="pending-inline-chip">
+                      <span>{p.studentName}</span>
+                      <span>₹ {p.amount}</span>
+                      <button onClick={()=>updatePaymentStatus(p._id,'approved')}>Approve</button>
+                    </div>
+                  ))}
+                  {pendingPayments.length > 3 && (
+                    <button className="link-btn" onClick={()=>setPendingModalOpen(true)}>View all pending</button>
+                  )}
+                  {pendingPayments.length <= 3 && (
+                    <button className="link-btn" onClick={()=>setPendingModalOpen(true)}>Open pending list</button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Top grid: left = search/list, right = created fee structures */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 360px',gap:16}}>
@@ -209,85 +299,173 @@ export default function Fees() {
 
             </div>
 
-            {/* Bottom: student details full width */}
-            <div className="panel-card" style={{padding:12}}>
-              {!selected && <div style={{padding:20,color:'#6b7280'}}>Select a student to see fee details</div>}
+            {/* Bottom: student details modal */}
+            {!selected && <div className="panel-card" style={{padding:12}}><div style={{padding:20,color:'#6b7280'}}>Select a student to see fee details</div></div>}
 
-              {selected && (
-                <div>
-                  <div style={{display:'flex',gap:16,alignItems:'center'}}>
-                    <div style={{width:140,flex:'none'}}>
-                      <div style={{width:140,height:140,overflow:'hidden',borderRadius:8,background:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        {selected.photo ? (
-                          <img src={selected.photo} alt={selected.name} style={{width:'100%',height:'100%',objectFit:'cover'}} />
+            {selected && (
+              <div className="fees-modal-overlay" onClick={()=>setSelected(null)}>
+                <div className="fees-modal" onClick={(e)=>e.stopPropagation()}>
+                  <div className="fees-modal-header">
+                    <div className="fees-header-left">
+                      <div className="fees-avatar header-avatar">
+                        {selected.image ? (
+                          <img src={selected.image} alt={selected.name} />
                         ) : (
-                          <div style={{color:'#9ca3af'}}>{(selected.name||'')[0]}</div>
+                          <span>{(selected.name||'')[0]}</span>
                         )}
                       </div>
-                    </div>
-                    <div style={{flex:1}}>
-                      <h2 style={{margin:0}}>{selected.name}</h2>
-                      <div style={{color:'#6b7280',marginTop:6}}>{selected.admissionNumber || ''} • Class {selected.class} • Section {selected.section}</div>
-                      <div style={{marginTop:8,display:'flex',gap:12}}>
-                        <div><strong>Phone:</strong> {selected.phoneNo || '-'}</div>
-                        <div><strong>Parent:</strong> {selected.motherName || selected.parentName || '-'}{selected.fatherName?(' / '+selected.fatherName):''}</div>
+                      <div className="fees-header-meta">
+                        <h2 className="fees-student-name">{selected.name}</h2>
+                        <div className="fees-chips">
+                          {selected.admissionNumber && <span className="chip">Adm No: {selected.admissionNumber}</span>}
+                          <span className="chip">Class {selected.class}</span>
+                          <span className="chip">Section {selected.section}</span>
+                        </div>
                       </div>
                     </div>
-                    <div style={{flexBasis:120,flexShrink:0,textAlign:'right'}}>
-                      <button className="cancel-btn" onClick={()=>setSelected(null)}>Close</button>
-                    </div>
+                    <button className="close-btn" onClick={()=>setSelected(null)}>Close</button>
                   </div>
 
-                  <hr style={{margin:'16px 0'}} />
+                  <div className="fees-modal-body">
+                    {(() => {
+                      const struct = structures.find(s => String(s.class) === String(selected.class));
+                      const payments = paymentsFor(selected);
+                      const paidByCat = summaryByCategory(payments);
+                      const categories = struct?.categories ? Object.keys(struct.categories) : Object.keys(paidByCat);
+                      const totalFee = struct?.categories ? Object.values(struct.categories).reduce((s,v)=>s+Number(v||0),0) : 0;
+                      const totalPaid = payments.reduce((s,p)=>s+Number(p.amount||0),0);
+                      const totalDue = Math.max(0, totalFee - totalPaid);
+                      const guardianNames = [selected.motherName || selected.parentName, selected.fatherName].filter(Boolean).join(' / ') || '-';
+                      const address = selected.address || '-';
+                      const rollNo = selected.rollNo || '-';
 
-                  <h3 style={{marginTop:0}}>Fee Structure & Dues</h3>
-                  {(() => {
-                    const struct = structures.find(s => String(s.class) === String(selected.class));
-                    const pays = paymentsFor(selected);
-                    const paidByCat = summaryByCategory(pays);
-                    const categories = struct?.categories ? Object.keys(struct.categories) : Object.keys(paidByCat);
-                    return (
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12}}>
-                        {categories.map(cat => {
-                          const total = Number(struct?.categories?.[cat] || 0);
-                          const paid = Number(paidByCat[cat] || 0);
-                          const due = Math.max(0, total - paid);
-                          return (
-                            <div key={cat} style={{padding:12,borderRadius:8,background:'#f8fafc'}}>
-                              <div style={{fontSize:12,color:'#6b7280'}}>{cat}</div>
-                              <div style={{fontWeight:700,fontSize:16}}>Total: ₹ {total}</div>
-                              <div style={{marginTop:6}}>Paid: ₹ {paid}</div>
-                              <div style={{marginTop:6}}>Due: ₹ {due}</div>
-                              {due > 0 && (
-                                <PayWidget student={selected} category={cat} due={due} onPaid={async (amt)=>{ /* will be replaced below */ }} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
+                      return (
+                        <div className="fees-body-grid">
+                          <div className="fees-column">
+                            <section className="detail-card info-card">
+                              <div className="section-heading">
+                                <h3>Student Snapshot</h3>
+                                <p>Key contact information</p>
+                              </div>
+                              <div className="info-pills">
+                                <div className="info-pill">
+                                  <span className="pill-label">Phone</span>
+                                  <span className="pill-value">{selected.phoneNo || '-'}</span>
+                                </div>
+                                <div className="info-pill">
+                                  <span className="pill-label">Parents</span>
+                                  <span className="pill-value">{guardianNames}</span>
+                                </div>
+                                <div className="info-pill">
+                                  <span className="pill-label">Roll No</span>
+                                  <span className="pill-value">{rollNo}</span>
+                                </div>
+                                <div className="info-pill wide">
+                                  <span className="pill-label">Address</span>
+                                  <span className="pill-value">{address}</span>
+                                </div>
+                              </div>
+                            </section>
 
-                  <hr style={{margin:'16px 0'}} />
+                            <section className="detail-card summary-card-wrapper">
+                              <div className="section-heading">
+                                <h3>Fee Summary</h3>
+                                <p>Overall collection status</p>
+                              </div>
+                              <div className="fees-summary">
+                                <div className="summary-card total">
+                                  <div className="summary-label">Total Fee</div>
+                                  <div className="summary-value">₹ {totalFee.toLocaleString()}</div>
+                                </div>
+                                <div className="summary-card paid">
+                                  <div className="summary-label">Paid</div>
+                                  <div className="summary-value">₹ {totalPaid.toLocaleString()}</div>
+                                </div>
+                                <div className="summary-card due">
+                                  <div className="summary-label">Due</div>
+                                  <div className="summary-value">₹ {totalDue.toLocaleString()}</div>
+                                </div>
+                              </div>
+                            </section>
 
-                  <h3>Payment History</h3>
-                  <div className="table-scroll">
-                    <table className="dash-table">
-                      <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Mode</th></tr></thead>
-                      <tbody>
-                        {paymentsFor(selected).map(p=> (
-                          <tr key={p._id}><td>{p.date?new Date(p.date).toLocaleDateString():''}</td><td>{p.category}</td><td>₹ {p.amount}</td><td>{p.mode||p.paymentMode||'N/A'}</td></tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            <section className="detail-card categories-card">
+                              <div className="section-heading">
+                                <h3>Fee Structure &amp; Dues</h3>
+                                <p>Track collections by category</p>
+                              </div>
+                              <div className="fees-grid">
+                                {categories.map(cat => {
+                                  const total = Number(struct?.categories?.[cat] || 0);
+                                  const paid = Number(paidByCat[cat] || 0);
+                                  const due = Math.max(0, total - paid);
+                                  const percent = total>0 ? Math.round((paid/total)*100) : 0;
+                                  return (
+                                    <div key={cat} className="fee-card">
+                                      <div className="fee-cat">{cat}</div>
+                                      <div className="fee-line"><span>Total</span><strong>₹ {total}</strong></div>
+                                      <div className="fee-line"><span>Paid</span><span>₹ {paid}</span></div>
+                                      <div className="fee-line"><span>Due</span><span>₹ {due}</span></div>
+                                      <div className="progress">
+                                        <div className="progress-track">
+                                          <div className="progress-fill" style={{width: `${percent}%`}}></div>
+                                        </div>
+                                        <span className="progress-text">{percent}%</span>
+                                      </div>
+                                      {due > 0 && (
+                                        <PayWidget student={selected} category={cat} due={due} />
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </section>
+
+                            <section className="detail-card history-card">
+                              <div className="section-heading history-heading">
+                                <h3>Payment History</h3>
+                                <span className="history-count">{payments.length} record{payments.length === 1 ? '' : 's'}</span>
+                              </div>
+                              <div className="history-table-scroll">
+                                <table className="dash-table payment-history-table">
+                                  <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Mode</th></tr></thead>
+                                  <tbody>
+                                    {payments.length === 0 ? (
+                                      <tr>
+                                        <td colSpan="4" style={{textAlign: 'center', padding: '20px', color: '#64748b'}}>
+                                          No payment history found for this student
+                                        </td>
+                                      </tr>
+                                    ) : (
+                                      payments.map(p => {
+                                        const when = p.date || p.createdAt;
+                                        return (
+                                          <tr key={p._id}>
+                                            <td>{when ? new Date(when).toLocaleDateString() : '-'}</td>
+                                            <td>{p.category || 'General'}</td>
+                                            <td>₹ {Number(p.amount || 0).toLocaleString()}</td>
+                                            <td>{p.mode || p.paymentMode || 'N/A'}</td>
+                                          </tr>
+                                        );
+                                      })
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </section>
+                          </div>
+
+                          
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
           </div>
         </div>
       </section>
-    
+    </>
   );
 }
