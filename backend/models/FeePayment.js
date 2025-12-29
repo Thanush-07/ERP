@@ -36,6 +36,11 @@ const feePaymentSchema = new mongoose.Schema(
     note: {
       type: String,
     },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "approved"
+    },
     date: {
       type: Date,
       default: Date.now
