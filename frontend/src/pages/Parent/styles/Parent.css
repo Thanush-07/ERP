@@ -93,6 +93,27 @@
   gap: 1.5rem;
 }
 
+.student-info-header {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.student-image-container {
+  flex-shrink: 0;
+}
+
+.student-image {
+  width: 180px;
+  height: 220px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  border: 3px solid #667eea;
+}
+
 .info-item {
   border-left: 4px solid #667eea;
   padding-left: 1rem;
@@ -353,40 +374,185 @@
 /* Fee Structure */
 .fee-structure {
   margin: 2rem 0;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.fee-structure-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #667eea;
 }
 
 .fee-structure h4 {
   color: #333;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  text-transform: uppercase;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
-.fee-items {
+.fee-structure-subtitle {
+  color: #999;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.category-cards-grid {
   display: grid;
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
 }
 
-.fee-item {
+.category-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 2px solid #e8e8e8;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: #667eea;
+}
+
+.category-card-paid {
+  border-color: #11998e;
+  background: linear-gradient(135deg, #11998e08, #38ef7d08);
+}
+
+.category-card-partial {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea08, #764ba208);
+}
+
+.category-card-pending {
+  border-color: #f5576c;
+  background: linear-gradient(135deg, #f5576c08, #f093fb08);
+}
+
+.category-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: #f9f9f9;
-  border-radius: 6px;
-  border-left: 4px solid #667eea;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e8e8e8;
 }
 
-.fee-item-name {
+.category-name {
   color: #333;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.status-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-paid {
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+  color: white;
+}
+
+.status-partial {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.status-pending {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  color: white;
+}
+
+.category-amounts {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  font-size: 0.95rem;
+}
+
+.amount-row:not(:last-child) {
+  border-bottom: 1px solid #e8e8e8;
+  margin-bottom: 0.6rem;
+}
+
+.amount-label {
+  color: #666;
   font-weight: 500;
 }
 
-.fee-item-amount {
+.amount-value {
+  color: #333;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.amount-value.paid {
+  color: #11998e;
+}
+
+.amount-value.remaining {
+  color: #f5576c;
+}
+
+.progress-container {
+  margin-top: 1rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.progress-label span:first-child {
+  color: #666;
+  font-weight: 500;
+}
+
+.progress-percent {
   color: #667eea;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e8e8e8;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 
 /* Payment History */
 .payment-history {
