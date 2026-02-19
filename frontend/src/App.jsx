@@ -38,61 +38,108 @@ import StaffChangePassword from "./pages/Staff/ChangePassword";
 import ParentLogin from "./pages/Parent/ParentLogin";
 import ParentDashboard from "./pages/Parent/Dashboard";
 
+// Student
+import StudentLayout from "./pages/student/StudentLayout";
+import StudentDashboard from "./pages/student/pages/dashboard/StudentDashboard";
+import PersonalInfo from "./pages/student/pages/profile/PersonalInfo";
+import ParentInfo from "./pages/student/pages/profile/ParentInfo";
+import ReferenceInfo from "./pages/student/pages/profile/ReferenceInfo";
+import Photos from "./pages/student/pages/profile/Photos";
+import Attendance from "./pages/student/pages/academics/Attendance";
+import Marks from "./pages/student/pages/academics/Marks";
+import Timetable from "./pages/student/pages/academics/Timetable";
+import Leave from "./pages/student/pages/academics/Leave";
+import StudentPortfolio from "./pages/student/pages/portfolio/StudentPortfolio";
+import Notifications from "./pages/student/pages/notifications/Notifications";
+import Announcements from "./pages/student/pages/announcements/Announcements";
+
+// Auth Context
+import { AuthProvider } from "./contexts/AuthContext";
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        {/* Company admin module with layout */}
-        <Route path="/company-admin" element={<CompanyLayout />}>
-          <Route path="dashboard" element={<CompanyAdminDashboard />} />
-          <Route path="institutions" element={<Institutions />} />
-          <Route path="users" element={<Users />} />
-          <Route path="report" element={<GlobalReport />} />
-        </Route>
+          {/* Company admin module with layout */}
+          <Route path="/company-admin" element={<CompanyLayout />}>
+            <Route path="dashboard" element={<CompanyAdminDashboard />} />
+            <Route path="institutions" element={<Institutions />} />
+            <Route path="users" element={<Users />} />
+            <Route path="report" element={<GlobalReport />} />
+          </Route>
 
-        {/* Institution admin module with layout */}
-        <Route path="/institution" element={<InstitutionLayout />}>
-          <Route path="dashboard" element={<InstitutionDashboard />} />
-          <Route path="branches" element={<InstitutionBranches />} />
-          <Route path="branch-admins" element={<BranchAdmins />} />
-          <Route path="reports" element={<InstitutionReports />} />
-          <Route path="change-password" element={<ChangePassword />} />
-        </Route>
-        {/* Branch admin module with layout */}
-        <Route path="/branch" element={<BranchLayout />}>
-          <Route path="dashboard" element={<BranchDashboard />} />
-          <Route path="students" element={<BranchStudents />} />
-          <Route path="fees" element={<BranchFees />} />
-          <Route path="sales" element={<BranchSales />} />
-          <Route path="inventory" element={<BranchInventory />} />
-          <Route path="expenses" element={<BranchExpenses />} />
-          <Route path="buses" element={<BranchBuses />} />
-          <Route path="staff-management" element={<BranchStaffManagement />} />
-          <Route path="change-password" element={<BranchChangePassword />} />
-          <Route path="reports" element={<BranchReports />} />
-        </Route>
-        {/* Staff module with layout */}
-        <Route path="/staff" element={<StaffLayout />}>
-          <Route path="dashboard" element={<StaffDashboard />} />
-          <Route path="attendance" element={<StaffAttendance />} />
-          <Route path="reports" element={<StaffReports />} />
-          <Route path="collect-fee" element={<StaffCollectFee />} />
-          <Route path="change-password" element={<StaffChangePassword />} />
-        </Route>
+          {/* Institution admin module with layout */}
+          <Route path="/institution" element={<InstitutionLayout />}>
+            <Route path="dashboard" element={<InstitutionDashboard />} />
+            <Route path="branches" element={<InstitutionBranches />} />
+            <Route path="branch-admins" element={<BranchAdmins />} />
+            <Route path="reports" element={<InstitutionReports />} />
+            <Route path="change-password" element={<ChangePassword />} />
+          </Route>
+          {/* Branch admin module with layout */}
+          <Route path="/branch" element={<BranchLayout />}>
+            <Route path="dashboard" element={<BranchDashboard />} />
+            <Route path="students" element={<BranchStudents />} />
+            <Route path="fees" element={<BranchFees />} />
+            <Route path="sales" element={<BranchSales />} />
+            <Route path="inventory" element={<BranchInventory />} />
+            <Route path="expenses" element={<BranchExpenses />} />
+            <Route path="buses" element={<BranchBuses />} />
+            <Route path="staff-management" element={<BranchStaffManagement />} />
+            <Route path="change-password" element={<BranchChangePassword />} />
+            <Route path="reports" element={<BranchReports />} />
+          </Route>
+          {/* Staff module with layout */}
+          <Route path="/staff" element={<StaffLayout />}>
+            <Route path="dashboard" element={<StaffDashboard />} />
+            <Route path="attendance" element={<StaffAttendance />} />
+            <Route path="reports" element={<StaffReports />} />
+            <Route path="collect-fee" element={<StaffCollectFee />} />
+            <Route path="change-password" element={<StaffChangePassword />} />
+          </Route>
 
-        {/* Parent */}
-        <Route path="/parent/login" element={<ParentLogin />} />
-        <Route path="/parent/dashboard" element={<ParentDashboard />} />
+          {/* Student */}
+          <Route path="/student" element={<StudentLayout />}>
+            <Route path="dashboard" element={<StudentDashboard />} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </BrowserRouter>
+            {/* Profile */}
+            <Route path="profile/personal" element={<PersonalInfo />} />
+            <Route path="profile/parent" element={<ParentInfo />} />
+            <Route path="profile/reference" element={<ReferenceInfo />} />
+            <Route path="profile/photos" element={<Photos />} />
+
+            {/* Academics */}
+            <Route path="academics/attendance" element={<Attendance />} />
+            <Route path="academics/marks" element={<Marks />} />
+            <Route path="academics/timetable" element={<Timetable />} />
+            <Route path="academics/leave" element={<Leave />} />
+
+            {/* Portfolio */}
+            <Route path="portfolio/sports" element={<StudentPortfolio />} />
+            <Route path="portfolio/events" element={<StudentPortfolio />} />
+            <Route path="portfolio/certifications" element={<StudentPortfolio />} />
+            <Route path="portfolio/projects" element={<StudentPortfolio />} />
+
+            {/* Others */}
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="announcements" element={<Announcements />} />
+          </Route>
+
+          {/* Parent */}
+          <Route path="/parent/login" element={<ParentLogin />} />
+          <Route path="/parent/dashboard" element={<ParentDashboard />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

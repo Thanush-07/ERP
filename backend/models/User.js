@@ -15,7 +15,8 @@ const userSchema = new mongoose.Schema(
         "institution_admin",
         "branch_admin",
         "staff",
-        "parent"
+        "parent",
+        "student"
       ],
       required: true
     },
@@ -37,21 +38,21 @@ const userSchema = new mongoose.Schema(
     // Staff-specific fields
     staffCategory: {
       type: String,
-      required: function() { return this.role === "staff"; }
+      required: function () { return this.role === "staff"; }
     },
     age: {
       type: Number,
       min: 18,
       max: 70,
-      required: function() { return this.role === "staff"; }
+      required: function () { return this.role === "staff"; }
     },
     address: {
       type: String,
-      required: function() { return this.role === "staff"; }
+      required: function () { return this.role === "staff"; }
     },
     location: {
       type: String,
-      required: function() { return this.role === "staff"; }
+      required: function () { return this.role === "staff"; }
     },
     // classes assigned to teaching staff (e.g. ["8A","9B"]) 
     classes: {

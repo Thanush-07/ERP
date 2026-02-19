@@ -28,7 +28,7 @@ export default function Login() {
       // 3) Save to localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      
+
       // Store branchId and institutionId for quick access
       if (user.branch_id) {
         localStorage.setItem("branchId", user.branch_id);
@@ -48,7 +48,9 @@ export default function Login() {
         navigate("/staff/dashboard");
       } else if (user.role === "parent") {
         navigate("/parent/dashboard");
-      } 
+      } else if (user.role === "student") {
+        navigate("/student/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
     } finally {
@@ -114,8 +116,8 @@ export default function Login() {
               <span>or</span>
             </div>
 
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="parent-btn"
               onClick={() => navigate("/parent/login")}
             >
