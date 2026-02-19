@@ -268,8 +268,6 @@ const BusSchema = new mongoose.Schema(
 // Indexes for better query performance
 BusSchema.index({ branch_id: 1 });
 BusSchema.index({ institution_id: 1 });
-BusSchema.index({ busId: 1 });
-BusSchema.index({ registrationNumber: 1 });
 BusSchema.index({ operationalStatus: 1 });
 
 export const Bus = mongoose.model("Bus", BusSchema);

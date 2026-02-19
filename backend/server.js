@@ -26,15 +26,21 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // -------------------- MongoDB Connection --------------------
 
+
 // =======  MongoDB Atlas =======
-const MONGO_URL_ATLAS = process.env.MONGO_ATLAS;
+const MONGO_URL = process.env.MONGO_ATLAS;
 
-// =======  Local MongoDB (Compass) =======
-const MONGO_URL_LOCAL = "mongodb://127.0.0.1:27017/first-crop_db";
+if (!MONGO_URL) {
+  console.error("❌ MongoDB connection string is missing. Please set MONGO_ATLAS in your .env file.");
+  process.exit(1);
+}
 
-// ======= SWITCH HERE =======
-const MONGO_URL = MONGO_URL_ATLAS;  // Atlas
-// const MONGO_URL = MONGO_URL_LOCAL; // Local Compass
+mongoose.connect(MONGO_URL)
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err);
+    process.exit(1);
+  });
 
 // -------------------- Routes --------------------
 app.use("/api/company", companyRouter);

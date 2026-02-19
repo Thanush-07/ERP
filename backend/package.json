@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
+    "dev": "set PORT=5000 && node server.js",
     "seed:users": "node seedUser.js",
-    "seed:parents": "node seedParentData.js"
+    "seed:parents": "node seedParentData.js",
+    "seed:students": "node seedStudents.js",
+    "seed:auth-parents": "node seedParents.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

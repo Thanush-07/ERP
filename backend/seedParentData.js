@@ -66,7 +66,7 @@ const seedDatabase = async () => {
 
     // Clear existing sample data
     console.log('\n🧹 Clearing old sample data...');
-    await Student.deleteMany({ admissionNumber: { $regex: '^ADM-2024-' } });
+    await Student.deleteMany({ registrationNumber: { $regex: '^ADM-2024-' } });
     await FeePayment.deleteMany({ studentName: { $in: ['Aarav Kumar', 'Priya Singh', 'Arjun Patel', 'Divya Sharma'] } });
     console.log('✓ Old data cleared');
 
@@ -80,7 +80,7 @@ const seedDatabase = async () => {
         rollNo: '15',
         parentName: 'Rajesh Kumar',
         phoneNo: '9876543210',
-        admissionNumber: 'ADM-2024-001',
+        registrationNumber: 'ADM-2024-001',
         academicYear: '2024-2025',
         status: 'active',
         address: '123 Main Street, Delhi',
@@ -97,7 +97,7 @@ const seedDatabase = async () => {
         rollNo: '28',
         parentName: 'Vikram Singh',
         phoneNo: '9123456789',
-        admissionNumber: 'ADM-2024-002',
+        registrationNumber: 'ADM-2024-002',
         academicYear: '2024-2025',
         status: 'active',
         address: '456 Green Park, Mumbai',
@@ -114,7 +114,7 @@ const seedDatabase = async () => {
         rollNo: '32',
         parentName: 'Ramesh Patel',
         phoneNo: '8765432109',
-        admissionNumber: 'ADM-2024-003',
+        registrationNumber: 'ADM-2024-003',
         academicYear: '2024-2025',
         status: 'active',
         address: '789 Tech Park, Bangalore',
@@ -131,7 +131,7 @@ const seedDatabase = async () => {
         rollNo: '22',
         parentName: 'Suresh Sharma',
         phoneNo: '9988776655',
-        admissionNumber: 'ADM-2024-004',
+        registrationNumber: 'ADM-2024-004',
         academicYear: '2024-2025',
         status: 'active',
         address: '321 Maple Avenue, Chennai',

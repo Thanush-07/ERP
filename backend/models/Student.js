@@ -13,6 +13,16 @@ const studentSchema = new mongoose.Schema(
       ref: "Branch",
       required: true
     },
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+    parent_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
     name: {
       type: String,
       required: true
@@ -41,7 +51,7 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    admissionNumber: {
+    registrationNumber: {
       type: String,
       required: true,
       unique: true
