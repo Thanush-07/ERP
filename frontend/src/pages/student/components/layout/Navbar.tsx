@@ -1,13 +1,9 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Search, Calendar, Clock } from 'lucide-react';
+import { IntegratedNotificationBell } from '@/components/common/IntegratedNotificationBell';
+import { Search, Calendar, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
-  const { user } = useAuth();
-  const [notifications] = useState(3);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -62,18 +58,7 @@ export default function Navbar() {
         <div className="h-8 w-[1px] bg-border mx-2" />
 
         {/* Notifications */}
-        <button
-          className="relative p-2 rounded-lg hover:bg-muted transition-colors"
-          onClick={() => navigate('/student/notifications')}
-          aria-label="Open notifications"
-        >
-          <Bell className="w-5 h-5 text-muted-foreground" />
-          {notifications > 0 && (
-            <span className="absolute top-1 right-1 w-4 h-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-              {notifications}
-            </span>
-          )}
-        </button>
+        <IntegratedNotificationBell />
       </div>
     </header>
   );

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // authentication
 import Login from "./pages/auth/Login";
+import AdminLogin from "./pages/auth/AdminLogin";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 // company admin
@@ -63,6 +64,7 @@ function App() {
         <Routes>
           {/* Auth */}
           <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<AdminLogin />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 

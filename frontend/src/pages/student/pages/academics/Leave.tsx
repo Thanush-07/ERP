@@ -44,7 +44,7 @@ const initialLeaveRequests: LeaveRequest[] = [
     reason: 'Family emergency',
     days: 3,
     type: 'Personal',
-    recipient: 'HOD',
+    recipient: 'Class Incharge',
     status: 'pending',
     submittedOn: '2024-02-18',
   },
@@ -126,7 +126,7 @@ export default function Leave() {
     setLeaveRequests([newRequest, ...leaveRequests]);
     toast({
       title: 'Leave Request Submitted',
-      description: `Your leave request for ${days} days has been submitted to ${formData.recipient}.`,
+      description: `Your leave request for ${days} days has been submitted to Class Incharge.`,
     });
 
     closeModal();
@@ -478,18 +478,6 @@ export default function Leave() {
               rows={3}
               placeholder={formData.type === 'On-duty' ? 'Type of Events / category of sports' : 'Enter the reason for leave'}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Request To *</label>
-            <select
-              value={formData.recipient}
-              onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
-              className="input-field"
-            >
-              <option value="Class Incharge">Class Incharge</option>
-              <option value="HOD">Head of Department (HOD)</option>
-            </select>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

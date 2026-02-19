@@ -1,4 +1,7 @@
 ﻿import { useAuth } from '@/contexts/AuthContext';
+import PageHeader from '@/pages/student/components/layout/PageHeader';
+import InfoCard from '@/pages/student/components/common/InfoCard';
+import SectionCard from '@/pages/student/components/common/SectionCard';
 import {
   User,
   Building2,
@@ -23,7 +26,7 @@ import {
   CartesianGrid,
   Tooltip as ChartTooltip,
 } from 'recharts';
-import "../../../Company_admin/styles/CompanyDashboard.css";
+import Badge from '@/pages/student/components/common/Badge';
 
 // Mock data
 const dashboardData = {
@@ -44,9 +47,9 @@ const dashboardData = {
     { sem: 'Sem 5', gpa: 8.45 },
   ],
   quickStats: [
-    { label: 'Classmates', value: 42, icon: Users, color: '#0ea5e9', bg: '#e0f2fe' },
-    { label: 'Subjects', value: 6, icon: BookOpen, color: '#22c55e', bg: '#dcfce7' },
-    { label: 'Assignments', value: 8, icon: FileText, color: '#eab308', bg: '#fef9c3' },
+    { label: 'Classmates', value: 42, icon: Users, color: 'text-info', bg: 'bg-info/10' },
+    { label: 'Subjects', value: 6, icon: BookOpen, color: 'text-success', bg: 'bg-success/10' },
+    { label: 'Assignments', value: 8, icon: FileText, color: 'text-warning', bg: 'bg-warning/10' },
   ],
   upcomingClasses: [
     { subject: 'Data Structures', time: '10:00 AM', room: 'CS-201' },
@@ -67,223 +70,172 @@ export default function StudentDashboard() {
   const { user } = useAuth();
 
   return (
-    <div className="dash-wrapper">
-      <div className="dash-header inst-header">
-        <div className="inst-header-main">
-          <div>
-            <h1>Welcome back, {user?.name?.split(' ')[0] || 'Student'}!</h1>
-            <p>Here's an overview of your academic progress</p>
-          </div>
-        </div>
-      </div>
+    <div className="animate-fade-in">
+      <PageHeader
+        title={`Welcome back, ${user?.name?.split(' ')[0]}!`}
+        subtitle="Here's an overview of your academic progress"
+      />
 
-      {/* Alerts */}
-      {dashboardData.alerts.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
-          {dashboardData.alerts.map((alert, index) => (
-            <div
-              key={index}
-              style={{ padding: '12px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', color: '#92400e' }}
-            >
-              <AlertTriangle size={20} />
-              <span>{alert.message}</span>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Summary Cards */}
-      <div className="dash-cards">
-        <div className="dash-card">
-          <span className="dash-card-label">Roll Number</span>
-          <span className="dash-card-value" style={{ fontSize: '1.2rem' }}>{user?.rollNo || 'N/A'}</span>
-          <User size={20} style={{ opacity: 0.5, marginTop: '5px' }} />
-        </div>
-        <div className="dash-card">
-          <span className="dash-card-label">Department</span>
-          <span className="dash-card-value" style={{ fontSize: '1.2rem' }}>{user?.department || 'N/A'}</span>
-          <Building2 size={20} style={{ opacity: 0.5, marginTop: '5px' }} />
-        </div>
-        <div className="dash-card">
-          <span className="dash-card-label">Year / Semester</span>
-          <span className="dash-card-value" style={{ fontSize: '1.2rem' }}>{user?.year || '-'} / {user?.semester || '-'}</span>
-          <Calendar size={20} style={{ opacity: 0.5, marginTop: '5px' }} />
-        </div>
-        <div className="dash-card">
-          <span className="dash-card-label">CGPA</span>
-          <span className="dash-card-value" style={{ fontSize: '1.2rem' }}>{dashboardData.cgpa.toFixed(2)}</span>
-          <GraduationCap size={20} style={{ opacity: 0.5, marginTop: '5px' }} />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <InfoCard
+          label="Roll Number"
+          value={user?.rollNo || 'N/A'}
+          icon={User}
+          variant="primary"
+        />
+        <InfoCard
+          label="Department"
+          value={user?.department || 'N/A'}
+          icon={Building2}
+        />
+        <InfoCard
+          label="Year / Semester"
+          value={`${user?.year || '-'} / ${user?.semester || '-'}`}
+          icon={Calendar}
+        />
+        <InfoCard
+          label="CGPA"
+          value={dashboardData.cgpa.toFixed(2)}
+          icon={GraduationCap}
+          variant="secondary"
+        />
       </div>
 
-      <div className="dash-bottom">
+      {/* Attendance & GPA Trend */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Attendance Donut */}
-        <section className="dash-panel" style={{ flex: 1 }}>
-          <div className="dash-panel-head">
-            <h2>Attendance</h2>
-            <p>Current Semester Overview</p>
-          </div>
-          <div className="dash-panel-body">
-            <div style={{ height: '240px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dashboardData.attendanceData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {dashboardData.attendanceData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '10px' }}>
+        <SectionCard
+          title="Attendance"
+          subtitle="Current Semester Overview"
+          icon={Target}
+        >
+          <div className="h-[240px] w-full flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height="80%">
+              <PieChart>
+                <Pie
+                  data={dashboardData.attendanceData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {dashboardData.attendanceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <ChartTooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex justify-center gap-6 mt-2">
               {dashboardData.attendanceData.map((entry, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: entry.color }} />
-                  <span style={{ fontSize: '14px', color: '#666' }}>
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+                  <span className="text-sm text-muted-foreground font-medium">
                     {entry.name} ({entry.value}%)
                   </span>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </SectionCard>
 
         {/* GPA Trend Chart */}
-        <section className="dash-panel" style={{ flex: 1 }}>
-          <div className="dash-panel-head">
-            <h2>GPA Trend</h2>
-            <p>Semester-wise</p>
+        <SectionCard
+          title="GPA Trend"
+          subtitle="Semester-wise"
+          icon={TrendingUp}
+        >
+          <div className="h-[240px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dashboardData.gpaTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis
+                  dataKey="sem"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: 'oklch(var(--muted-foreground))' }}
+                />
+                <YAxis
+                  domain={[6, 10]}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: 'oklch(var(--muted-foreground))' }}
+                />
+                <ChartTooltip />
+                <Line
+                  type="monotone"
+                  dataKey="gpa"
+                  stroke="#0d9488"
+                  strokeWidth={2}
+                  dot={{ fill: '#0d9488', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-          <div className="dash-panel-body">
-            <div style={{ height: '240px', width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dashboardData.gpaTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="sem"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6b7280' }}
-                  />
-                  <YAxis
-                    domain={[6, 10]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#6b7280' }}
-                  />
-                  <ChartTooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="gpa"
-                    stroke="#0d9488"
-                    strokeWidth={2}
-                    dot={{ fill: '#0d9488', r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </section>
+        </SectionCard>
       </div>
 
-      <div className="dash-bottom" style={{ marginTop: '20px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Marks */}
-        <section className="dash-panel" style={{ flex: 2 }}>
-          <div className="dash-panel-head">
-            <h2>Recent Marks</h2>
-            <p>Latest examination results</p>
-          </div>
-          <div className="dash-panel-body">
-            <div className="table-scroll">
-              <table className="dash-table">
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left' }}>Subject</th>
-                    <th style={{ textAlign: 'center' }}>Int</th>
-                    <th style={{ textAlign: 'center' }}>Ext</th>
-                    <th style={{ textAlign: 'center' }}>Total</th>
-                    <th style={{ textAlign: 'center' }}>Grade</th>
+        <SectionCard title="Recent Marks" subtitle="Latest examination results">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-2 font-semibold">Subject</th>
+                  <th className="text-center py-3 px-2 font-semibold">Int</th>
+                  <th className="text-center py-3 px-2 font-semibold">Ext</th>
+                  <th className="text-center py-3 px-2 font-semibold">Total</th>
+                  <th className="text-center py-3 px-2 font-semibold">Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dashboardData.recentMarks.map((mark, index) => (
+                  <tr key={index} className="border-b border-border last:border-0">
+                    <td className="py-3 px-2 font-medium">{mark.subject}</td>
+                    <td className="text-center py-3 px-2">{mark.internal}</td>
+                    <td className="text-center py-3 px-2">{mark.external}</td>
+                    <td className="text-center py-3 px-2 font-semibold">{mark.total}</td>
+                    <td className="text-center py-3 px-2">
+                      <Badge variant={mark.grade.startsWith('A') ? 'success' : 'info'}>
+                        {mark.grade}
+                      </Badge>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {dashboardData.recentMarks.map((mark, index) => (
-                    <tr key={index}>
-                      <td style={{ fontWeight: 500 }}>{mark.subject}</td>
-                      <td style={{ textAlign: 'center' }}>{mark.internal}</td>
-                      <td style={{ textAlign: 'center' }}>{mark.external}</td>
-                      <td style={{ textAlign: 'center', fontWeight: 600 }}>{mark.total}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          backgroundColor: mark.grade.startsWith('A') ? '#dcfce7' : '#e0f2fe',
-                          color: mark.grade.startsWith('A') ? '#166534' : '#075985'
-                        }}>
-                          {mark.grade}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </section>
+        </SectionCard>
 
         {/* Quick Stats */}
-        <section className="dash-panel" style={{ flex: 1 }}>
-          <div className="dash-panel-head">
-            <h2>Quick Stats</h2>
-            <p>Overview of your classroom</p>
-          </div>
-          <div className="dash-panel-body">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-              {dashboardData.quickStats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '16px',
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
-                      background: '#fff'
-                    }}
-                  >
-                    <div style={{
-                      padding: '10px',
-                      borderRadius: '50%',
-                      backgroundColor: stat.bg,
-                      color: stat.color,
-                      marginBottom: '8px'
-                    }}>
-                      <Icon size={24} />
-                    </div>
-                    <span style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>{stat.value}</span>
-                    <span style={{ fontSize: '12px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {stat.label}
-                    </span>
+        <SectionCard title="Quick Stats" subtitle="Overview of your classroom">
+          <div className="grid grid-cols-3 gap-4 h-full">
+            {dashboardData.quickStats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={index}
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border border-border bg-card/50 hover:bg-card transition-colors animate-scale-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className={`p-3 rounded-full ${stat.bg} ${stat.color} mb-3`}>
+                    <Icon className="w-6 h-6" />
                   </div>
-                );
-              })}
-            </div>
+                  <span className="text-2xl font-bold mb-1">{stat.value}</span>
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                    {stat.label}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-        </section>
+        </SectionCard>
       </div>
     </div>
   );

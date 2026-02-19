@@ -9,6 +9,9 @@ const API_URL = "http://localhost:5000/api/auth/login";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [registerNumber, setRegisterNumber] = useState("");
+  const [phone, setPhone] = useState("");
+  const [loginMode, setLoginMode] = useState("student"); // "student", "parent"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -19,25 +22,33 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // 1) Send request to backend
-      const res = await axios.post(API_URL, { email, password });
+      let payload;
+      if (loginMode === "student") {
+        if (!registerNumber || !phone) {
+          setError("Register number and phone are required");
+          setLoading(false);
+          return;
+        }
+        payload = { registerNumber, phone };
+      } else {
+        if (!email || !password) {
+          setError("Email and password are required");
+          setLoading(false);
+          return;
+        }
+        payload = { email, password };
+      }
 
-      // 2) Get token and user from response
+      const res = await axios.post(API_URL, payload);
       const { token, user } = res.data;
-
-      // 3) Save to localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-
-      // Store branchId and institutionId for quick access
       if (user.branch_id) {
         localStorage.setItem("branchId", user.branch_id);
       }
       if (user.institution_id) {
         localStorage.setItem("institutionId", user.institution_id);
       }
-
-      // 4) Redirect based on role
       if (user.role === "company_admin") {
         navigate("/company-admin/dashboard");
       } else if (user.role === "institution_admin") {
@@ -52,7 +63,8 @@ export default function Login() {
         navigate("/student/dashboard");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password");
+      console.error("Login error:", err.response?.status, err.response?.data);
+      setError(err.response?.data?.message || err.message || "Invalid login details");
     } finally {
       setLoading(false);
     }
@@ -65,9 +77,9 @@ export default function Login() {
         <img src={ematixLogo} alt="Ematix Logo" className="left-logo" />
 
         <div className="left-text">
-          <h1 className="left-title">Ematix School Management ERP</h1>
+          <h1 className="left-title">Ematix college  Management ERP</h1>
           <p>
-            A complete cloud-based enterprise school management system.
+            A complete cloud-based enterprise college management system.
             Manage students, staff, attendance, academics, fees & more.
           </p>
         </div>
@@ -80,27 +92,53 @@ export default function Login() {
           <p className="form-sub">Login to your account</p>
 
           <form onSubmit={handleSubmit}>
-            <div className="field">
-              <label>Email</label>
-              <input
-                type="email"
-                placeholder="admin@school.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label>Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+            {loginMode === "student" ? (
+              <>
+                <div className="field">
+                  <label>Register Number</label>
+                  <input
+                    type="text"
+                    placeholder="REG2026001"
+                    value={registerNumber}
+                    onChange={(e) => setRegisterNumber(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label>Phone Number</label>
+                  <input
+                    type="text"
+                    placeholder="9876543210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="field">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    placeholder="parent@school.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
+            )}
 
             {error && <div className="error">{error}</div>}
 
@@ -108,21 +146,29 @@ export default function Login() {
               {loading ? "Signing in..." : "Login"}
             </button>
 
+            <div className="mode-toggle-container">
+              <p className="toggle-label">Or continue as {loginMode === "student" ? "Parent" : "Student"}</p>
+              <div className="toggle-buttons">
+                <button
+                  type="button"
+                  className={loginMode === "student" ? "toggle-btn-active" : "toggle-btn-inactive"}
+                  onClick={() => setLoginMode("student")}
+                >
+                  Student Login
+                </button>
+                <button
+                  type="button"
+                  className={loginMode === "parent" ? "toggle-btn-active" : "toggle-btn-inactive"}
+                  onClick={() => setLoginMode("parent")}
+                >
+                  Parent Login
+                </button>
+              </div>
+            </div>
+
             <div className="forgot-link">
               <Link to="/forgot-password">Forgot password?</Link>
             </div>
-
-            <div className="divider">
-              <span>or</span>
-            </div>
-
-            <button
-              type="button"
-              className="parent-btn"
-              onClick={() => navigate("/parent/login")}
-            >
-              Login as Parent
-            </button>
           </form>
         </div>
       </div>

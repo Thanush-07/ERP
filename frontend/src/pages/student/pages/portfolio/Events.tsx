@@ -268,18 +268,6 @@ export default function Events({ onPendingChange }: EventsProps) {
                   className="w-full px-3 py-2 border border-input rounded-lg bg-background"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as 'upcoming' | 'completed' | 'cancelled' })}
-                  className="w-full px-3 py-2 border border-input rounded-lg bg-background"
-                >
-                  <option value="upcoming">Upcoming</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
               <div className="flex gap-2 justify-end mt-6">
                 <DialogClose asChild>
                   <button
